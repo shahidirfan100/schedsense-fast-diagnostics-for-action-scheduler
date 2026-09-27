@@ -17,7 +17,7 @@ Updated: 2026-09-27
 - Focused request-context checks confirmed invalid or absent view nonces fall back safely, valid allowlisted filters are read and sanitized, and non-scalar cookie/basic-auth values are rejected.
 - Installed and activated the 1.0.3 package on a clean WordPress Playground site with WordPress 7.1.2, PHP 8.3.33, WooCommerce 11.1.2, and Action Scheduler 4.0.0. The plugin rendered and queried live queue data; its loopback and REST checks returned HTTP 200.
 - Enabled `WP_DEBUG` and `WP_DEBUG_LOG`, revisited the plugin dashboard and queue views, and repeated failed-action deletion. The failed fixture was removed after confirmation, its pending fixture remained pending, and the debug log contained zero lines mentioning SchedSense. The disposable provider site's log did contain unrelated WooCommerce/SQLite notices.
-- Plugin Check's browser page displayed “Checks complete. No errors found,” but five frontend-enqueue requests returned HTTP 400 with body `0` in the Playground environment. Treat that UI result as partial, not a definitive stock Plugin Check pass; run the official Plugin Check workflow on a conventional WordPress filesystem before submission.
+- Plugin Check's browser page displayed “Checks complete. No errors found,” but five frontend-enqueue requests returned HTTP 400 with body `0` in the Playground environment. Treat that UI result as partial, not a definitive stock Plugin Check pass. The available local WordPress copy also cannot boot under this CLI PHP because the PDO SQLite driver is missing; run the official Plugin Check workflow on a conventional WordPress filesystem before submission.
 
 ## Package
 
