@@ -2,7 +2,7 @@
 /**
  * Deactivation tasks.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor;
@@ -11,7 +11,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class Deactivator {
 	/**
-	 * Remove Queue Health Monitor's temporary data only.
+	 * Remove SchedSense's temporary data only.
 	 *
 	 * @return void
 	 */

@@ -1,8 +1,8 @@
 <?php
 /**
- * Queue Health Monitor uninstall cleanup.
+ * SchedSense uninstall cleanup.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;

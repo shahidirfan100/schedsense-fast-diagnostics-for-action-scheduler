@@ -2,7 +2,7 @@
 /**
  * Plugin composition root.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor;

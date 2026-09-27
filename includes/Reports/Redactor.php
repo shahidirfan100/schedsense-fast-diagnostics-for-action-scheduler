@@ -2,7 +2,7 @@
 /**
  * Privacy-conscious report redaction.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Reports;

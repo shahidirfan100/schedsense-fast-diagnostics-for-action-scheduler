@@ -1,8 +1,8 @@
 <?php
 /**
- * Queue Health Monitor admin controller.
+ * SchedSense admin controller.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Admin;
@@ -46,16 +46,16 @@ final class AdminController {
 	/** Add Tools submenu. */
 	public function add_menu() {
 		$this->page_hook = add_management_page(
-			__( 'Queue Health Monitor', 'queue-health-monitor' ),
-			__( 'Queue Health Monitor', 'queue-health-monitor' ),
+			__( 'SchedSense', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+			__( 'SchedSense', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			Capabilities::required(),
-			'qhm',
+			'schedsense',
 			array( $this, 'render_page' )
 		);
 	}
 
 	/**
-	 * Enqueue local assets only on Queue Health Monitor.
+	 * Enqueue local assets only on SchedSense.
 	 *
 	 * @param string $hook Current admin page hook.
 	 */
@@ -64,14 +64,14 @@ final class AdminController {
 			return;
 		}
 		wp_enqueue_style( 'dashicons' );
-		wp_enqueue_style( 'qhm-admin', QUEUE_HEALTH_MONITOR_PLUGIN_URL . 'admin/css/queue-health-monitor-admin.css', array(), QUEUE_HEALTH_MONITOR_VERSION );
-		wp_enqueue_script( 'qhm-admin', QUEUE_HEALTH_MONITOR_PLUGIN_URL . 'admin/js/queue-health-monitor-admin.js', array(), QUEUE_HEALTH_MONITOR_VERSION, true );
+		wp_enqueue_style( 'qhm-admin', QUEUE_HEALTH_MONITOR_PLUGIN_URL . 'admin/css/schedsense-admin.css', array(), QUEUE_HEALTH_MONITOR_VERSION );
+		wp_enqueue_script( 'qhm-admin', QUEUE_HEALTH_MONITOR_PLUGIN_URL . 'admin/js/schedsense-admin.js', array(), QUEUE_HEALTH_MONITOR_VERSION, true );
 		wp_localize_script(
 			'qhm-admin',
 			'qhmAdmin',
 			array(
-				'copied'     => __( 'Diagnostic report copied.', 'queue-health-monitor' ),
-				'copyFailed' => __( 'Copy failed. Select the report and copy it manually.', 'queue-health-monitor' ),
+				'copied'     => __( 'Diagnostic report copied.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				'copyFailed' => __( 'Copy failed. Select the report and copy it manually.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			)
 		);
 	}
@@ -79,7 +79,7 @@ final class AdminController {
 	/** Render the requested tab. */
 	public function render_page() {
 		if ( ! Capabilities::current_user_can_access() ) {
-			wp_die( esc_html__( 'You do not have permission to access Queue Health Monitor.', 'queue-health-monitor' ) );
+			wp_die( esc_html__( 'You do not have permission to access SchedSense.', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 		}
 
 		$tab       = $this->request_tab();
@@ -114,7 +114,6 @@ final class AdminController {
 	/** Trigger one normal WP-Cron spawn attempt. */
 	public function handle_spawn_cron() {
 		$this->authorize_action( 'qhm_spawn_cron' );
-		require_once ABSPATH . WPINC . '/cron.php';
 		$spawned = spawn_cron( time() );
 		Cache::clear();
 		$this->redirect_with_notice( $spawned ? 'cron-spawned' : 'cron-not-spawned' );
@@ -409,18 +408,18 @@ final class AdminController {
 	/** Authorize a state-changing admin-post request. */
 	private function authorize_action( $nonce_action ) {
 		if ( ! Capabilities::current_user_can_access() ) {
-			wp_die( esc_html__( 'You do not have permission to perform this action.', 'queue-health-monitor' ) );
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 		}
 		check_admin_referer( $nonce_action );
 	}
 
-	/** Redirect to Queue Health Monitor after an action. */
+	/** Redirect to SchedSense after an action. */
 	private function redirect_with_notice( $notice, array $context = array() ) {
 		$url = add_query_arg(
 			array_merge(
 				$context,
 				array(
-					'page'       => 'qhm',
+					'page'       => 'schedsense',
 					'qhm_notice' => sanitize_key( $notice ),
 				)
 			),

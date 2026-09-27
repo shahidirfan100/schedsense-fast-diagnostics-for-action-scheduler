@@ -1,14 +1,14 @@
 <?php
-/** @package QueueHealthMonitor */
+/** @package SchedSense */
 defined( 'ABSPATH' ) || exit;
 ?>
-<section class="qhm-panel"><h2><?php echo esc_html__( 'Top queue producers', 'queue-health-monitor' ); ?></h2><p><?php echo esc_html__( 'Counts are from bounded samples of up to 100 failed, 100 overdue pending, and 100 potentially stuck in-progress actions. They are sampled counts, not full-table totals.', 'queue-health-monitor' ); ?></p><div class="qhm-table-wrap"><table class="widefat striped qhm-table"><caption class="screen-reader-text"><?php echo esc_html__( 'Sampled problem queue sources', 'queue-health-monitor' ); ?></caption><thead><tr><th><?php echo esc_html__( 'Source', 'queue-health-monitor' ); ?></th><th><?php echo esc_html__( 'Overdue pending sampled', 'queue-health-monitor' ); ?></th><th><?php echo esc_html__( 'Failed sampled', 'queue-health-monitor' ); ?></th><th><?php echo esc_html__( 'Potentially stuck sampled', 'queue-health-monitor' ); ?></th><th><?php echo esc_html__( 'Confidence', 'queue-health-monitor' ); ?></th><th><?php echo esc_html__( 'Top hook', 'queue-health-monitor' ); ?></th></tr></thead><tbody>
+<section class="qhm-panel"><h2><?php echo esc_html__( 'Top queue producers', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></h2><p><?php echo esc_html__( 'Counts are from bounded samples of up to 100 failed, 100 overdue pending, and 100 potentially stuck in-progress actions. They are sampled counts, not full-table totals.', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></p><div class="qhm-table-wrap"><table class="widefat striped qhm-table"><caption class="screen-reader-text"><?php echo esc_html__( 'Sampled problem queue sources', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></caption><thead><tr><th><?php echo esc_html__( 'Source', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Overdue pending sampled', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Failed sampled', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Potentially stuck sampled', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Confidence', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Top hook', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th></tr></thead><tbody>
 	<?php
 	if ( empty( $snapshot['queue']['data_available'] ) ) :
 		?>
-		<tr><td colspan="6"><?php echo esc_html__( 'Queue data could not be read, so source samples are unavailable.', 'queue-health-monitor' ); ?></td></tr>
+		<tr><td colspan="6"><?php echo esc_html__( 'Queue data could not be read, so source samples are unavailable.', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></td></tr>
 	<?php elseif ( empty( $snapshot['queue']['sources'] ) ) : ?>
-		<tr><td colspan="6"><?php echo esc_html__( 'No failed, overdue, or potentially stuck actions were found in the bounded sample.', 'queue-health-monitor' ); ?></td></tr>
+		<tr><td colspan="6"><?php echo esc_html__( 'No failed, overdue, or potentially stuck actions were found in the bounded sample.', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></td></tr>
 	<?php endif; ?>
 	<?php
 	foreach ( $snapshot['queue']['sources'] as $queue_health_monitor_source ) :

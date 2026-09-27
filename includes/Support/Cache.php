@@ -2,7 +2,7 @@
 /**
  * Bounded diagnostic caches.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Support;
@@ -34,7 +34,7 @@ final class Cache {
 	}
 
 	/**
-	 * Clear all Queue Health Monitor caches.
+	 * Clear all SchedSense caches.
 	 *
 	 * @return void
 	 */

@@ -2,7 +2,7 @@
 /**
  * Bounded queue analysis.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Scheduler;

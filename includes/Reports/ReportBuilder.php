@@ -2,7 +2,7 @@
 /**
  * Plaintext diagnostic report builder.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Reports;
@@ -30,49 +30,49 @@ final class ReportBuilder {
 		$queue       = $snapshot['queue'];
 		$counts      = isset( $queue['counts'] ) ? $queue['counts'] : array();
 		$lines       = array(
-			__( 'QUEUE HEALTH MONITOR DIAGNOSTIC REPORT', 'queue-health-monitor' ),
+			__( 'SCHEDSENSE DIAGNOSTIC REPORT', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			'',
 			sprintf(
 				/* translators: %s: Report generation date and time. */
-				__( 'Generated: %s', 'queue-health-monitor' ),
+				__( 'Generated: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				wp_date( 'Y-m-d H:i:s T', $snapshot['generated_at'] )
 			),
 			'',
-			__( 'WORDPRESS', 'queue-health-monitor' ),
+			__( 'WORDPRESS', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			/* translators: %s: WordPress version. */
-			sprintf( __( 'Version: %s', 'queue-health-monitor' ), $environment['wordpress_version'] ),
+			sprintf( __( 'Version: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $environment['wordpress_version'] ),
 			/* translators: %s: PHP version. */
-			sprintf( __( 'PHP: %s', 'queue-health-monitor' ), $environment['php_version'] ),
+			sprintf( __( 'PHP: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $environment['php_version'] ),
 			/* translators: %s: Database version. */
-			sprintf( __( 'Database: %s', 'queue-health-monitor' ), $environment['database_version'] ),
+			sprintf( __( 'Database: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $environment['database_version'] ),
 			/* translators: %s: Site timezone. */
-			sprintf( __( 'Timezone: %s', 'queue-health-monitor' ), $environment['timezone'] ),
+			sprintf( __( 'Timezone: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $environment['timezone'] ),
 			/* translators: %s: Whether WordPress Multisite is enabled. */
-			sprintf( __( 'Multisite: %s', 'queue-health-monitor' ), $environment['multisite'] ? __( 'Yes (current site only)', 'queue-health-monitor' ) : __( 'No', 'queue-health-monitor' ) ),
+			sprintf( __( 'Multisite: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $environment['multisite'] ? __( 'Yes (current site only)', 'schedsense-fast-diagnostics-for-action-scheduler' ) : __( 'No', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
 			/* translators: %s: WooCommerce version or not-detected label. */
-				sprintf( __( 'WooCommerce: %s', 'queue-health-monitor' ), ! empty( $environment['woocommerce'] ) ? $environment['woocommerce'] : __( 'Not detected', 'queue-health-monitor' ) ),
+				sprintf( __( 'WooCommerce: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), ! empty( $environment['woocommerce'] ) ? $environment['woocommerce'] : __( 'Not detected', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
 			'',
-			__( 'ACTION SCHEDULER', 'queue-health-monitor' ),
+			__( 'ACTION SCHEDULER', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			/* translators: %s: Action Scheduler version or not-detected label. */
-				sprintf( __( 'Version: %s', 'queue-health-monitor' ), ! empty( $snapshot['action_scheduler_version'] ) ? $snapshot['action_scheduler_version'] : __( 'Not detected', 'queue-health-monitor' ) ),
+				sprintf( __( 'Version: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), ! empty( $snapshot['action_scheduler_version'] ) ? $snapshot['action_scheduler_version'] : __( 'Not detected', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
 			/* translators: %s: Whether queue data was successfully read. */
-			sprintf( __( 'Queue data: %s', 'queue-health-monitor' ), ! empty( $queue['data_available'] ) ? __( 'Available', 'queue-health-monitor' ) : __( 'Unavailable', 'queue-health-monitor' ) ),
+			sprintf( __( 'Queue data: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), ! empty( $queue['data_available'] ) ? __( 'Available', 'schedsense-fast-diagnostics-for-action-scheduler' ) : __( 'Unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
 			/* translators: %s: Pending action count or unavailable label. */
-			sprintf( __( 'Pending: %s', 'queue-health-monitor' ), isset( $counts['pending'] ) ? $counts['pending'] : __( 'Unavailable', 'queue-health-monitor' ) ),
+			sprintf( __( 'Pending: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), isset( $counts['pending'] ) ? $counts['pending'] : __( 'Unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
 			/* translators: %s: Failed action count or unavailable label. */
-			sprintf( __( 'Failed: %s', 'queue-health-monitor' ), isset( $counts['failed'] ) ? $counts['failed'] : __( 'Unavailable', 'queue-health-monitor' ) ),
+			sprintf( __( 'Failed: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), isset( $counts['failed'] ) ? $counts['failed'] : __( 'Unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
 			/* translators: %s: One-hour overdue action count or unavailable label. */
-			sprintf( __( 'Past Due >1h: %s', 'queue-health-monitor' ), isset( $counts['overdue_1h'] ) ? $counts['overdue_1h'] : __( 'Unavailable', 'queue-health-monitor' ) ),
+			sprintf( __( 'Past Due >1h: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), isset( $counts['overdue_1h'] ) ? $counts['overdue_1h'] : __( 'Unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
 			/* translators: %s: Twenty-four-hour overdue action count or unavailable label. */
-			sprintf( __( 'Past Due >24h: %s', 'queue-health-monitor' ), isset( $counts['overdue_24h'] ) ? $counts['overdue_24h'] : __( 'Unavailable', 'queue-health-monitor' ) ),
+			sprintf( __( 'Past Due >24h: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), isset( $counts['overdue_24h'] ) ? $counts['overdue_24h'] : __( 'Unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
 			'',
-			__( 'WP-CRON', 'queue-health-monitor' ),
+			__( 'WP-CRON', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			/* translators: %s: Boolean DISABLE_WP_CRON state. */
-			sprintf( __( 'DISABLE_WP_CRON: %s', 'queue-health-monitor' ), $environment['disable_wp_cron'] ? 'true' : 'false' ),
+			sprintf( __( 'DISABLE_WP_CRON: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $environment['disable_wp_cron'] ? 'true' : 'false' ),
 			/* translators: %s: Boolean ALTERNATE_WP_CRON state. */
-			sprintf( __( 'ALTERNATE_WP_CRON: %s', 'queue-health-monitor' ), $environment['alternate_wp_cron'] ? 'true' : 'false' ),
+			sprintf( __( 'ALTERNATE_WP_CRON: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $environment['alternate_wp_cron'] ? 'true' : 'false' ),
 			'',
-			__( 'CHECKS', 'queue-health-monitor' ),
+			__( 'CHECKS', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 		);
 
 		foreach ( $snapshot['checks'] as $check ) {
@@ -80,23 +80,23 @@ final class ReportBuilder {
 		}
 
 		$lines[] = '';
-		$lines[] = __( 'TOP PROBLEM SOURCES (BOUNDED SAMPLE)', 'queue-health-monitor' );
+		$lines[] = __( 'TOP PROBLEM SOURCES (BOUNDED SAMPLE)', 'schedsense-fast-diagnostics-for-action-scheduler' );
 		if ( empty( $queue['data_available'] ) ) {
-			$lines[] = __( 'Unavailable because the Action Scheduler queue could not be read.', 'queue-health-monitor' );
+			$lines[] = __( 'Unavailable because the Action Scheduler queue could not be read.', 'schedsense-fast-diagnostics-for-action-scheduler' );
 		} elseif ( empty( $queue['sources'] ) ) {
-			$lines[] = __( 'No failed, overdue, or potentially stuck actions were found in the bounded sample.', 'queue-health-monitor' );
+			$lines[] = __( 'No failed, overdue, or potentially stuck actions were found in the bounded sample.', 'schedsense-fast-diagnostics-for-action-scheduler' );
 		}
 		foreach ( array_slice( $queue['sources'], 0, 10 ) as $source ) {
 			/* translators: 1: Source name, 2: Failed count, 3: Past-due count, 4: Potentially stuck count, 5: Confidence. */
-			$lines[] = sprintf( __( '%1$s: %2$d failed, %3$d past due, %4$d potentially stuck (%5$s confidence)', 'queue-health-monitor' ), $source['name'], $source['failed'], $source['past_due'], $source['stuck'], $source['confidence'] );
+			$lines[] = sprintf( __( '%1$s: %2$d failed, %3$d past due, %4$d potentially stuck (%5$s confidence)', 'schedsense-fast-diagnostics-for-action-scheduler' ), $source['name'], $source['failed'], $source['past_due'], $source['stuck'], $source['confidence'] );
 		}
 		$lines[] = '';
-		$lines[] = __( 'LIKELY DIAGNOSIS', 'queue-health-monitor' );
+		$lines[] = __( 'LIKELY DIAGNOSIS', 'schedsense-fast-diagnostics-for-action-scheduler' );
 		/* translators: 1: Diagnostic confidence, 2: Diagnosis message. */
-		$lines[] = sprintf( __( '%1$s: %2$s', 'queue-health-monitor' ), $diagnosis['confidence'], $diagnosis['message'] );
+		$lines[] = sprintf( __( '%1$s: %2$s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $diagnosis['confidence'], $diagnosis['message'] );
 		$lines[] = '';
-		$lines[] = __( 'PRIVACY', 'queue-health-monitor' );
-		$lines[] = __( 'No action arguments, credentials, cookies, authorization data, customer records, or full server paths are included.', 'queue-health-monitor' );
+		$lines[] = __( 'PRIVACY', 'schedsense-fast-diagnostics-for-action-scheduler' );
+		$lines[] = __( 'No action arguments, credentials, cookies, authorization data, customer records, or full server paths are included.', 'schedsense-fast-diagnostics-for-action-scheduler' );
 
 		return $this->redactor->redact( implode( "\n", $lines ) );
 	}

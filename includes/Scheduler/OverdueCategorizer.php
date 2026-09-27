@@ -2,7 +2,7 @@
 /**
  * Pure overdue-age categorization.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Scheduler;

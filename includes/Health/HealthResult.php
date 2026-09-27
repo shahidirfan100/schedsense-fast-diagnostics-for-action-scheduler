@@ -2,7 +2,7 @@
 /**
  * Immutable health-check result.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Health;

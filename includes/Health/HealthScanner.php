@@ -2,7 +2,7 @@
 /**
  * Fault-isolated health scanner.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Health;
@@ -64,12 +64,12 @@ final class HealthScanner {
 			} catch ( Throwable $throwable ) {
 				$results[] = ( new HealthResult(
 					'check-failed',
-					__( 'Diagnostic check unavailable', 'queue-health-monitor' ),
+					__( 'Diagnostic check unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 					'unavailable',
 					'none',
-					__( 'One diagnostic could not finish. Other checks are unaffected.', 'queue-health-monitor' ),
+					__( 'One diagnostic could not finish. Other checks are unaffected.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 					'',
-					__( 'Refresh diagnostics. If the result repeats, inspect the site PHP error log.', 'queue-health-monitor' )
+					__( 'Refresh diagnostics. If the result repeats, inspect the site PHP error log.', 'schedsense-fast-diagnostics-for-action-scheduler' )
 				) )->to_array();
 			}
 		}

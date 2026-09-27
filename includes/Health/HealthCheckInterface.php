@@ -2,7 +2,7 @@
 /**
  * Health check contract.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Health;

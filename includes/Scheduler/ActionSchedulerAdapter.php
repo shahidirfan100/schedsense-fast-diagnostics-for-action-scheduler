@@ -2,7 +2,7 @@
 /**
  * Compatibility boundary for Action Scheduler.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Scheduler;
@@ -41,11 +41,11 @@ final class ActionSchedulerAdapter {
 					return (string) $versions->latest_version();
 				}
 			} catch ( Throwable $throwable ) {
-				return __( 'Detected; version unavailable', 'queue-health-monitor' );
+				return __( 'Detected; version unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' );
 			}
 		}
 
-		return $this->is_available() ? __( 'Detected; version unavailable', 'queue-health-monitor' ) : '';
+		return $this->is_available() ? __( 'Detected; version unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ) : '';
 	}
 
 	/**

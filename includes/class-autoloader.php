@@ -1,8 +1,8 @@
 <?php
 /**
- * Small PSR-4 style autoloader for Queue Health Monitor classes.
+ * Small PSR-4 style autoloader for SchedSense classes.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor;

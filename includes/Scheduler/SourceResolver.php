@@ -2,7 +2,7 @@
 /**
  * Resolve a scheduled hook to its likely owning plugin.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Scheduler;
@@ -134,7 +134,7 @@ final class SourceResolver {
 				'confidence' => 'high',
 				'evidence'   => sprintf(
 					/* translators: %s: Redacted plugin-relative callback path. */
-					__( 'Registered callback file: %s', 'queue-health-monitor' ),
+					__( 'Registered callback file: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 					$relative
 				),
 				'path'       => $relative,
@@ -196,7 +196,7 @@ final class SourceResolver {
 				return array(
 					'name'       => $name,
 					'confidence' => 'possible',
-					'evidence'   => __( 'Inferred from the hook prefix; no callback file was available.', 'queue-health-monitor' ),
+					'evidence'   => __( 'Inferred from the hook prefix; no callback file was available.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 					'path'       => '',
 					'type'       => 'inference',
 				);
@@ -208,9 +208,9 @@ final class SourceResolver {
 	/** @return array */
 	private function unknown() {
 		return array(
-			'name'       => __( 'Unknown', 'queue-health-monitor' ),
+			'name'       => __( 'Unknown', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			'confidence' => 'unavailable',
-			'evidence'   => __( 'No registered callback or reliable plugin path was available.', 'queue-health-monitor' ),
+			'evidence'   => __( 'No registered callback or reliable plugin path was available.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			'path'       => '',
 			'type'       => 'unknown',
 		);

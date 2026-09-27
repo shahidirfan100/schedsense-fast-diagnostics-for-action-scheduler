@@ -2,7 +2,7 @@
 /**
  * Environment facts used by diagnostics and reports.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Support;
@@ -21,7 +21,7 @@ final class Environment {
 		return array(
 			'wordpress_version' => get_bloginfo( 'version' ),
 			'php_version'       => PHP_VERSION,
-			'database_version'  => method_exists( $wpdb, 'db_version' ) ? $wpdb->db_version() : __( 'Unavailable', 'queue-health-monitor' ),
+			'database_version'  => method_exists( $wpdb, 'db_version' ) ? $wpdb->db_version() : __( 'Unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			'memory_limit'      => ini_get( 'memory_limit' ),
 			'max_execution'     => ini_get( 'max_execution_time' ),
 			'timezone'          => wp_timezone_string(),

@@ -2,7 +2,7 @@
 /**
  * Local REST API check.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Health\Checks;
@@ -36,12 +36,12 @@ final class RestApiCheck implements HealthCheckInterface {
 		if ( is_wp_error( $response ) ) {
 			return new HealthResult(
 				'rest-api',
-				__( 'REST API', 'queue-health-monitor' ),
+				__( 'REST API', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				'warning',
 				'low',
-				__( 'The local REST API request failed.', 'queue-health-monitor' ),
+				__( 'The local REST API request failed.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				sanitize_text_field( $response->get_error_message() ),
-				__( 'Review REST authentication, firewall, and server loopback settings.', 'queue-health-monitor' ),
+				__( 'Review REST authentication, firewall, and server loopback settings.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				array(
 					'response_ms' => $elapsed,
 					'error_code'  => sanitize_key( $response->get_error_code() ),
@@ -52,15 +52,15 @@ final class RestApiCheck implements HealthCheckInterface {
 		$code = absint( wp_remote_retrieve_response_code( $response ) );
 		if ( 200 !== $code ) {
 			/* translators: %d: HTTP response code. */
-			$summary = sprintf( __( 'The local REST API returned HTTP %d.', 'queue-health-monitor' ), $code );
+			$summary = sprintf( __( 'The local REST API returned HTTP %d.', 'schedsense-fast-diagnostics-for-action-scheduler' ), $code );
 			return new HealthResult(
 				'rest-api',
-				__( 'REST API', 'queue-health-monitor' ),
+				__( 'REST API', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				'warning',
 				'low',
 				$summary,
-				__( 'Authentication or security policy may be restricting the REST endpoint.', 'queue-health-monitor' ),
-				__( 'Confirm whether this response is intentional before changing security rules.', 'queue-health-monitor' ),
+				__( 'Authentication or security policy may be restricting the REST endpoint.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				__( 'Confirm whether this response is intentional before changing security rules.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				array(
 					'http_code'   => $code,
 					'response_ms' => $elapsed,
@@ -72,12 +72,12 @@ final class RestApiCheck implements HealthCheckInterface {
 		if ( ! is_array( $body ) || ! isset( $body['capabilities'] ) ) {
 			return new HealthResult(
 				'rest-api',
-				__( 'REST API', 'queue-health-monitor' ),
+				__( 'REST API', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				'warning',
 				'low',
-				__( 'The REST API response did not include the expected post-type data.', 'queue-health-monitor' ),
-				__( 'The endpoint responded, but its JSON structure did not match WordPress core.', 'queue-health-monitor' ),
-				__( 'Review REST API filters and security rules before changing them.', 'queue-health-monitor' ),
+				__( 'The REST API response did not include the expected post-type data.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				__( 'The endpoint responded, but its JSON structure did not match WordPress core.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				__( 'Review REST API filters and security rules before changing them.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				array(
 					'http_code'   => $code,
 					'response_ms' => $elapsed,
@@ -86,13 +86,13 @@ final class RestApiCheck implements HealthCheckInterface {
 		}
 
 		/* translators: %d: Response time in milliseconds. */
-		$evidence = sprintf( __( 'HTTP %1$d; response in %2$d ms.', 'queue-health-monitor' ), $code, $elapsed );
+		$evidence = sprintf( __( 'HTTP %1$d; response in %2$d ms.', 'schedsense-fast-diagnostics-for-action-scheduler' ), $code, $elapsed );
 		return new HealthResult(
 			'rest-api',
-			__( 'REST API', 'queue-health-monitor' ),
+			__( 'REST API', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			'pass',
 			'none',
-			__( 'The local REST API post-type endpoint responded with valid data.', 'queue-health-monitor' ),
+			__( 'The local REST API post-type endpoint responded with valid data.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			$evidence,
 			'',
 			array(

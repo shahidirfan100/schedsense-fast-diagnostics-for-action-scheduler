@@ -2,7 +2,7 @@
 /**
  * Capability policy.
  *
- * @package QueueHealthMonitor
+ * @package SchedSense
  */
 
 namespace QueueHealthMonitor\Support;
@@ -17,7 +17,7 @@ final class Capabilities {
 	 */
 	public static function required() {
 		/**
-		 * Filters the capability required to access Queue Health Monitor.
+		 * Filters the capability required to access SchedSense.
 		 *
 		 * @param string $capability Default capability.
 		 */
