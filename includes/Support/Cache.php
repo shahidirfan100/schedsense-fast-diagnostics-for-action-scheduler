@@ -5,13 +5,13 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Support;
+namespace SchedSense\Support;
 
 defined( 'ABSPATH' ) || exit;
 
 final class Cache {
-	const SNAPSHOT_KEY = 'qhm_diagnostic_snapshot';
-	const SOURCE_KEY   = 'qhm_source_map';
+	const SNAPSHOT_KEY = 'schedsense_diagnostic_snapshot';
+	const SOURCE_KEY   = 'schedsense_source_map';
 
 	/**
 	 * Get the cached snapshot.

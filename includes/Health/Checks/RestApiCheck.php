@@ -5,10 +5,11 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Health\Checks;
+namespace SchedSense\Health\Checks;
 
-use QueueHealthMonitor\Health\HealthCheckInterface;
-use QueueHealthMonitor\Health\HealthResult;
+use SchedSense\Health\HealthCheckInterface;
+use SchedSense\Health\HealthResult;
+use SchedSense\Support\RequestContext;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -16,7 +17,7 @@ final class RestApiCheck implements HealthCheckInterface {
 	/** @inheritDoc */
 	public function run( array $context ) {
 		$url      = add_query_arg( 'context', 'edit', rest_url( 'wp/v2/types/post' ) );
-		$cookies  = wp_unslash( $_COOKIE );
+		$cookies  = RequestContext::cookies_for_site_request();
 		$headers  = array(
 			'Cache-Control' => 'no-cache',
 			'X-WP-Nonce'    => wp_create_nonce( 'wp_rest' ),
@@ -24,9 +25,9 @@ final class RestApiCheck implements HealthCheckInterface {
 		$timeout  = 10;
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This is the WordPress core Site Health SSL filter; its name must remain unchanged.
 		$sslverify = apply_filters( 'https_local_ssl_verify', false, $url );
-		if ( isset( $_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'] ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Forward Basic Auth to this site's own Site Health-style REST request; do not store or display it.
-			$headers['Authorization'] = 'Basic ' . base64_encode( wp_unslash( $_SERVER['PHP_AUTH_USER'] ) . ':' . wp_unslash( $_SERVER['PHP_AUTH_PW'] ) );
+		$authorization = RequestContext::basic_authorization_header();
+		if ( '' !== $authorization ) {
+			$headers['Authorization'] = $authorization;
 		}
 
 		$started  = microtime( true );

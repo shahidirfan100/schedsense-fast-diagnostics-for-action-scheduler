@@ -5,7 +5,7 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Support;
+namespace SchedSense\Support;
 
 defined( 'ABSPATH' ) || exit;
 

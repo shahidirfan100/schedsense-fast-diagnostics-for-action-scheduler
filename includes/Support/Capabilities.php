@@ -5,7 +5,7 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Support;
+namespace SchedSense\Support;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -21,7 +21,7 @@ final class Capabilities {
 		 *
 		 * @param string $capability Default capability.
 		 */
-		$capability = apply_filters( 'queue_health_monitor_required_capability', 'manage_options' );
+		$capability = apply_filters( 'schedsense_required_capability', 'manage_options' );
 		return is_string( $capability ) && '' !== $capability ? $capability : 'manage_options';
 	}
 

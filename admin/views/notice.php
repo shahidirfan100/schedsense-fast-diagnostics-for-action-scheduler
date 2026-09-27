@@ -2,7 +2,7 @@
 /** @package SchedSense */
 defined( 'ABSPATH' ) || exit;
 
-$queue_health_monitor_messages = array(
+$schedsense_messages = array(
 	'refreshed'        => __( 'Diagnostics refreshed.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 	'cache-cleared'    => __( 'SchedSense caches cleared.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 	'cron-spawned'     => __( 'WordPress accepted a standard cron spawn request. This does not prove that every queued callback completed.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
@@ -13,6 +13,6 @@ $queue_health_monitor_messages = array(
 	'action-delete-error' => __( 'The failed action could not be deleted. Refresh the list and check its current status.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 );
 ?>
-<?php if ( isset( $queue_health_monitor_messages[ $notice ] ) ) : ?>
-	<div class="notice notice-info is-dismissible"><p><?php echo esc_html( $queue_health_monitor_messages[ $notice ] ); ?></p></div>
+<?php if ( isset( $schedsense_messages[ $notice ] ) ) : ?>
+	<div class="notice notice-info is-dismissible"><p><?php echo esc_html( $schedsense_messages[ $notice ] ); ?></p></div>
 <?php endif; ?>

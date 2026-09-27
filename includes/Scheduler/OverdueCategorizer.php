@@ -5,7 +5,7 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Scheduler;
+namespace SchedSense\Scheduler;
 
 defined( 'ABSPATH' ) || exit;
 

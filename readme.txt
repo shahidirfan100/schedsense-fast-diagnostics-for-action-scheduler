@@ -3,7 +3,7 @@ Contributors: shahidirfan100
 Tags: cron, diagnostics, queue, troubleshooting, site health
 Requires at least: 6.8
 Tested up to: 7.1
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -79,6 +79,10 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 
 == Changelog ==
 
+= 1.0.3 =
+* Hardened diagnostic request context and nonce-protected queue filters.
+* Updated plugin identifiers and WordPress path resolution for the SchedSense brand.
+
 = 1.0.2 =
 * Rebranded the plugin as SchedSense: Fast Diagnostics for Action Scheduler and aligned the plugin slug and text domain.
 * Removed a redundant WordPress core cron include before calling the normal cron spawner.
@@ -94,5 +98,5 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 
 == Upgrade Notice ==
 
-= 1.0.2 =
-Uses a distinctive name and matching plugin slug, removes a redundant core include, and refreshes the directory media assets.
+= 1.0.3 =
+Hardens diagnostic request handling, sanitizes loopback credentials, and uses WordPress path APIs for plugin and content locations.

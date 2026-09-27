@@ -5,24 +5,26 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Health\Checks;
+namespace SchedSense\Health\Checks;
 
-use QueueHealthMonitor\Health\HealthCheckInterface;
-use QueueHealthMonitor\Health\HealthResult;
+use SchedSense\Health\HealthCheckInterface;
+use SchedSense\Health\HealthResult;
+use SchedSense\Support\RequestContext;
 
 defined( 'ABSPATH' ) || exit;
 
 final class LoopbackCheck implements HealthCheckInterface {
 	/** @inheritDoc */
 	public function run( array $context ) {
+		// Resolve the core endpoint from the configured site URL, including subdirectory installs.
 		$url      = site_url( 'wp-cron.php' );
 		$body     = array( 'site-health' => 'loopback-test' );
-		$cookies  = wp_unslash( $_COOKIE );
+		$cookies  = RequestContext::cookies_for_site_request();
 		$timeout  = 10;
 		$headers  = array( 'Cache-Control' => 'no-cache' );
-		if ( isset( $_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'] ) ) {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Forward Basic Auth to this site's own Site Health-style loopback request; do not store or display it.
-			$headers['Authorization'] = 'Basic ' . base64_encode( wp_unslash( $_SERVER['PHP_AUTH_USER'] ) . ':' . wp_unslash( $_SERVER['PHP_AUTH_PW'] ) );
+		$authorization = RequestContext::basic_authorization_header();
+		if ( '' !== $authorization ) {
+			$headers['Authorization'] = $authorization;
 		}
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This is the WordPress core Site Health SSL filter; its name must remain unchanged.
 		$sslverify = apply_filters( 'https_local_ssl_verify', false, $url );

@@ -5,18 +5,18 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Health;
+namespace SchedSense\Health;
 
-use QueueHealthMonitor\Health\Checks\ActionSchedulerCheck;
-use QueueHealthMonitor\Health\Checks\CronCheck;
-use QueueHealthMonitor\Health\Checks\FailedActionsCheck;
-use QueueHealthMonitor\Health\Checks\LoopbackCheck;
-use QueueHealthMonitor\Health\Checks\OverdueActionsCheck;
-use QueueHealthMonitor\Health\Checks\RestApiCheck;
-use QueueHealthMonitor\Health\Checks\StuckActionsCheck;
-use QueueHealthMonitor\Scheduler\ActionSchedulerAdapter;
-use QueueHealthMonitor\Scheduler\ActionAnalyzer;
-use QueueHealthMonitor\Support\Environment;
+use SchedSense\Health\Checks\ActionSchedulerCheck;
+use SchedSense\Health\Checks\CronCheck;
+use SchedSense\Health\Checks\FailedActionsCheck;
+use SchedSense\Health\Checks\LoopbackCheck;
+use SchedSense\Health\Checks\OverdueActionsCheck;
+use SchedSense\Health\Checks\RestApiCheck;
+use SchedSense\Health\Checks\StuckActionsCheck;
+use SchedSense\Scheduler\ActionSchedulerAdapter;
+use SchedSense\Scheduler\ActionAnalyzer;
+use SchedSense\Support\Environment;
 use Throwable;
 
 defined( 'ABSPATH' ) || exit;

@@ -5,10 +5,10 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Health\Checks;
+namespace SchedSense\Health\Checks;
 
-use QueueHealthMonitor\Health\HealthCheckInterface;
-use QueueHealthMonitor\Health\HealthResult;
+use SchedSense\Health\HealthCheckInterface;
+use SchedSense\Health\HealthResult;
 
 defined( 'ABSPATH' ) || exit;
 

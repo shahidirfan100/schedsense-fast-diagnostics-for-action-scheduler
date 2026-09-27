@@ -5,10 +5,10 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor;
+namespace SchedSense;
 
-use QueueHealthMonitor\Admin\AdminController;
-use QueueHealthMonitor\Scheduler\ActionSchedulerAdapter;
+use SchedSense\Admin\AdminController;
+use SchedSense\Scheduler\ActionSchedulerAdapter;
 
 defined( 'ABSPATH' ) || exit;
 

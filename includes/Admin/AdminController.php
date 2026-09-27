@@ -5,15 +5,15 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Admin;
+namespace SchedSense\Admin;
 
-use QueueHealthMonitor\Diagnosis\DiagnosisEngine;
-use QueueHealthMonitor\Health\HealthScanner;
-use QueueHealthMonitor\Reports\ReportBuilder;
-use QueueHealthMonitor\Scheduler\ActionSchedulerAdapter;
-use QueueHealthMonitor\Scheduler\SourceResolver;
-use QueueHealthMonitor\Support\Cache;
-use QueueHealthMonitor\Support\Capabilities;
+use SchedSense\Diagnosis\DiagnosisEngine;
+use SchedSense\Health\HealthScanner;
+use SchedSense\Reports\ReportBuilder;
+use SchedSense\Scheduler\ActionSchedulerAdapter;
+use SchedSense\Scheduler\SourceResolver;
+use SchedSense\Support\Cache;
+use SchedSense\Support\Capabilities;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -37,10 +37,10 @@ final class AdminController {
 	public function register() {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_assets' ) );
-		add_action( 'admin_post_qhm_refresh', array( $this, 'handle_refresh' ) );
-		add_action( 'admin_post_qhm_clear_cache', array( $this, 'handle_clear_cache' ) );
-		add_action( 'admin_post_qhm_spawn_cron', array( $this, 'handle_spawn_cron' ) );
-		add_action( 'admin_post_qhm_delete_failed_action', array( $this, 'handle_delete_failed_action' ) );
+		add_action( 'admin_post_schedsense_refresh', array( $this, 'handle_refresh' ) );
+		add_action( 'admin_post_schedsense_clear_cache', array( $this, 'handle_clear_cache' ) );
+		add_action( 'admin_post_schedsense_spawn_cron', array( $this, 'handle_spawn_cron' ) );
+		add_action( 'admin_post_schedsense_delete_failed_action', array( $this, 'handle_delete_failed_action' ) );
 	}
 
 	/** Add Tools submenu. */
@@ -49,7 +49,7 @@ final class AdminController {
 			__( 'SchedSense', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			__( 'SchedSense', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			Capabilities::required(),
-			'schedsense',
+			SCHEDSENSE_ADMIN_PAGE_SLUG,
 			array( $this, 'render_page' )
 		);
 	}
@@ -64,11 +64,11 @@ final class AdminController {
 			return;
 		}
 		wp_enqueue_style( 'dashicons' );
-		wp_enqueue_style( 'qhm-admin', QUEUE_HEALTH_MONITOR_PLUGIN_URL . 'admin/css/schedsense-admin.css', array(), QUEUE_HEALTH_MONITOR_VERSION );
-		wp_enqueue_script( 'qhm-admin', QUEUE_HEALTH_MONITOR_PLUGIN_URL . 'admin/js/schedsense-admin.js', array(), QUEUE_HEALTH_MONITOR_VERSION, true );
+		wp_enqueue_style( 'schedsense-admin', SCHEDSENSE_PLUGIN_URL . 'admin/css/schedsense-admin.css', array(), SCHEDSENSE_VERSION );
+		wp_enqueue_script( 'schedsense-admin', SCHEDSENSE_PLUGIN_URL . 'admin/js/schedsense-admin.js', array(), SCHEDSENSE_VERSION, true );
 		wp_localize_script(
-			'qhm-admin',
-			'qhmAdmin',
+			'schedsense-admin',
+			'schedsense_admin',
 			array(
 				'copied'     => __( 'Diagnostic report copied.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				'copyFailed' => __( 'Copy failed. Select the report and copy it manually.', 'schedsense-fast-diagnostics-for-action-scheduler' ),
@@ -94,26 +94,26 @@ final class AdminController {
 			$report = ( new ReportBuilder() )->build( $snapshot, $diagnosis );
 		}
 
-		require QUEUE_HEALTH_MONITOR_PLUGIN_DIR . 'admin/views/page.php';
+		require SCHEDSENSE_PLUGIN_DIR . 'admin/views/page.php';
 	}
 
 	/** Handle explicit diagnostic refresh. */
 	public function handle_refresh() {
-		$this->authorize_action( 'qhm_refresh_diagnostics' );
+		$this->authorize_action( 'schedsense_refresh_diagnostics' );
 		Cache::clear();
 		$this->redirect_with_notice( 'refreshed' );
 	}
 
 	/** Handle explicit cache clear. */
 	public function handle_clear_cache() {
-		$this->authorize_action( 'qhm_clear_cache' );
+		$this->authorize_action( 'schedsense_clear_cache' );
 		Cache::clear();
 		$this->redirect_with_notice( 'cache-cleared' );
 	}
 
 	/** Trigger one normal WP-Cron spawn attempt. */
 	public function handle_spawn_cron() {
-		$this->authorize_action( 'qhm_spawn_cron' );
+		$this->authorize_action( 'schedsense_spawn_cron' );
 		$spawned = spawn_cron( time() );
 		Cache::clear();
 		$this->redirect_with_notice( $spawned ? 'cron-spawned' : 'cron-not-spawned' );
@@ -121,7 +121,7 @@ final class AdminController {
 
 	/** Delete one action only when Action Scheduler still reports it as failed. */
 	public function handle_delete_failed_action() {
-		$this->authorize_action( 'qhm_delete_failed_action' );
+		$this->authorize_action( 'schedsense_delete_failed_action' );
 
 		// The nonce is verified above; absint() constrains the identifier to a positive integer.
 		// phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- authorize_action() verifies the nonce; input is unslashed and passed through absint().
@@ -353,16 +353,31 @@ final class AdminController {
 
 	/** @return string */
 	private function request_notice() {
-		return $this->request_enum( 'qhm_notice', array( 'refreshed', 'cache-cleared', 'cron-spawned', 'cron-not-spawned', 'action-deleted', 'action-no-longer-failed', 'action-delete-unavailable', 'action-delete-error' ), '' );
+		return $this->request_enum( 'schedsense_notice', array( 'refreshed', 'cache-cleared', 'cron-spawned', 'cron-not-spawned', 'action-deleted', 'action-no-longer-failed', 'action-delete-unavailable', 'action-delete-error' ), '' );
+	}
+
+	/** Verify the nonce included with read-only view filters and navigation. */
+	private function has_valid_view_nonce() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The nonce is sanitized and verified below before any read-only GET value is used.
+		if ( ! isset( $_GET['_wpnonce'] ) || ! is_string( $_GET['_wpnonce'] ) ) {
+			return false;
+		}
+
+		$nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
+		return (bool) wp_verify_nonce( $nonce, 'schedsense_view' );
 	}
 
 	/** @return string */
 	private function request_text( $key ) {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only table filter; no state changes occur.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The read-only view nonce is checked before its GET value is accessed.
+		if ( ! $this->has_valid_view_nonce() ) {
+			return '';
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified above before reading this GET value.
 		if ( ! isset( $_GET[ $key ] ) ) {
 			return '';
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only value is unslashed, scalar-checked, and sanitized before use.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The view nonce is checked above; value is unslashed, scalar-checked, and sanitized before use.
 		$value = wp_unslash( $_GET[ $key ] );
 		return is_scalar( $value ) ? sanitize_text_field( (string) $value ) : '';
 	}
@@ -377,9 +392,13 @@ final class AdminController {
 	/** @return int */
 	private function request_positive_int( $key, $fallback ) {
 		$value = absint( $fallback );
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only pagination filter; no state changes occur.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The read-only view nonce is checked before its GET value is accessed.
+		if ( ! $this->has_valid_view_nonce() ) {
+			return max( 1, $value );
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified above before reading this GET value.
 		if ( isset( $_GET[ $key ] ) ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only value is unslashed and scalar-checked before absint().
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The view nonce is checked above; value is unslashed and scalar-checked before absint().
 			$raw = wp_unslash( $_GET[ $key ] );
 			if ( is_scalar( $raw ) ) {
 				$value = absint( $raw );
@@ -391,9 +410,13 @@ final class AdminController {
 	/** @return string */
 	private function request_enum( $key, array $allowed, $fallback ) {
 		$value = $fallback;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only list filter; no state changes occur.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The read-only view nonce is checked before its GET value is accessed.
+		if ( ! $this->has_valid_view_nonce() ) {
+			return $fallback;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified above before reading this GET value.
 		if ( isset( $_GET[ $key ] ) ) {
-			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only value is unslashed, scalar-checked, and sanitized with sanitize_key() before use.
+			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The view nonce is checked above; value is unslashed, scalar-checked, and sanitized with sanitize_key() before use.
 			$raw = wp_unslash( $_GET[ $key ] );
 			if ( is_scalar( $raw ) ) {
 				$value = sanitize_key( (string) $raw );
@@ -419,12 +442,13 @@ final class AdminController {
 			array_merge(
 				$context,
 				array(
-					'page'       => 'schedsense',
-					'qhm_notice' => sanitize_key( $notice ),
+					'page'       => SCHEDSENSE_ADMIN_PAGE_SLUG,
+					'schedsense_notice' => sanitize_key( $notice ),
 				)
 			),
 			admin_url( 'tools.php' )
 		);
+		$url = add_query_arg( '_wpnonce', wp_create_nonce( 'schedsense_view' ), $url );
 		wp_safe_redirect( $url );
 		exit;
 	}

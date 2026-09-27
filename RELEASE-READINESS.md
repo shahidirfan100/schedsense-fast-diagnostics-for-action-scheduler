@@ -1,35 +1,28 @@
-# SchedSense 1.0.2 release-readiness report
+# SchedSense 1.0.3 WordPress.org review remediation
 
 Updated: 2026-09-27
 
-## Rebrand and review fixes
+## Review findings addressed
 
-- Public name: **SchedSense: Fast Diagnostics for Action Scheduler**.
-- Requested WordPress.org slug and GitHub repository: `schedsense-fast-diagnostics-for-action-scheduler`.
-- Updated the plugin header, text domain, admin label, repository URL, readme, and directory media.
-- Removed the redundant WordPress cron include before `spawn_cron()`.
-- Corrected the failed-action filter form so it submits to the new `schedsense` admin page route.
-- Added translator context for the two placeholder strings reported by Plugin Check.
+- Replaced hard-coded plugin and content directory constants with WordPress path APIs; retained `site_url( 'wp-cron.php' )` so loopback checks target the site's real core endpoint, including subdirectory installs.
+- Added nonce validation before reading the plugin's GET filters, tabs, and pagination values. Navigation links and filter forms carry the view nonce; state-changing controls retain capability checks and their own POST nonces.
+- Sanitized cookies and HTTP Basic Authentication values before forwarding them to same-site loopback and REST requests.
+- Replaced generic `qhm` and `queue_health_monitor_*` symbols with the distinct `SchedSense` / `schedsense_*` identifiers, and changed the admin page slug from `schedsense` to `schedsense_diagnostics`.
+- Kept the cron diagnostic on WordPress's normal spawn path without directly including the core cron file.
 
-## Validation completed
+## Validation
 
-- WordPress.org readme validator accepted the file. Its only note was: “No donate link was found.”
-- PHP syntax checks passed for all 33 PHP files; the admin JavaScript passed `node --check`.
-- PHP_CodeSniffer 3.13.6 with Plugin Check's `plugin-review.xml` ruleset completed with exit code 0 after the translator fixes.
-- `git diff --check` found no whitespace errors.
-- WordPress Playground runtime: WordPress 7.1.2, PHP 8.3.33, Action Scheduler 4.2.0. The dashboard read live counts (12 pending, 7 overdue, 3 failed, 1 in progress); loopback and REST API checks returned HTTP 200.
-- Browser smoke test confirmed the failed-to-pending filter submission remains on `page=schedsense`, overdue ranges appear for pending actions, and no browser page errors occurred.
-- Failed-action handler test confirmed: pending actions are preserved, a still-failed action can be deleted, filter context is retained, nonce and capability checks are required, and the cache is cleared.
-- Five directory media files match the five readme screenshot captions. Icons and banners are within the WordPress.org asset dimensions and file-size limits.
+- Official WordPress.org Readme Validator accepted the current readme. The only note is that no donate link was found; this is optional.
+- PHP syntax, JavaScript syntax, `git diff --check`, and Plugin Check's `plugin-review.xml` PHPCS ruleset passed. PHPCS reported zero errors and warnings across the plugin PHP files.
+- Focused request-context checks confirmed invalid or absent view nonces fall back safely, valid allowlisted filters are read and sanitized, and non-scalar cookie/basic-auth values are rejected.
+- Installed and activated the 1.0.3 package on a clean WordPress Playground site with WordPress 7.1.2, PHP 8.3.33, WooCommerce 11.1.2, and Action Scheduler 4.0.0. The plugin rendered and queried live queue data; its loopback and REST checks returned HTTP 200.
+- Enabled `WP_DEBUG` and `WP_DEBUG_LOG`, revisited the plugin dashboard and queue views, and repeated failed-action deletion. The failed fixture was removed after confirmation, its pending fixture remained pending, and the debug log contained zero lines mentioning SchedSense. The disposable provider site's log did contain unrelated WooCommerce/SQLite notices.
+- Plugin Check's browser page displayed “Checks complete. No errors found,” but five frontend-enqueue requests returned HTTP 400 with body `0` in the Playground environment. Treat that UI result as partial, not a definitive stock Plugin Check pass; run the official Plugin Check workflow on a conventional WordPress filesystem before submission.
 
-## Plugin Check result and limitation
+## Package
 
-The Plugin Check page was run with General, Plugin Repo, Security, Performance, and Accessibility selected, with both Error and Warning severities. After the two translator fixes, its result pane displayed **“Checks complete. No errors found.”**
+- Candidate: `SchedSense-1.0.3-review-candidate-final.zip` (root folder `schedsense-fast-diagnostics-for-action-scheduler`). The package contains plugin runtime files and readme, excluding repository documentation and WordPress.org directory artwork.
 
-This is not a conclusive stock Plugin Check pass. WordPress Playground's virtual filesystem does not support the exclusive file lock used by PHPCS's reporter, so the disposable Plugin Check copy required a test-only adjustment that removed only that append lock. The original checker file was restored and its SHA-256 verified after the scan. Five frontend-enqueue checks still returned HTTP 400 with an empty `0` response: `enqueued_scripts_size`, `enqueued_styles_size`, `enqueued_styles_scope`, `enqueued_scripts_scope`, and `non_blocking_scripts`. Plugin Check's browser runner ignored those individual failures while rendering its success banner.
+## Submission boundary
 
-SchedSense enqueues its CSS and JavaScript only on its Tools admin page and adds no frontend assets. Even so, run the unmodified Plugin Check on a standard WordPress filesystem before directory submission to verify those five checks there.
-
-## WordPress.org submission status
-
-The repository rename and code rebrand do not reserve a WordPress.org slug. The requested slug still needs approval by the Plugin Review team; no submission or reviewer reply was made as part of this release work.
+This is a reviewed release candidate, not a WordPress.org approval or submission. WordPress.org's automated and human review can still identify issues that local checks do not reproduce.

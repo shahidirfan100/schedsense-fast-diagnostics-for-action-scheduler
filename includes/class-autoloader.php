@@ -5,7 +5,7 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor;
+namespace SchedSense;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -17,7 +17,7 @@ spl_autoload_register(
 		}
 
 		$relative = substr( $class_name, strlen( $prefix ) );
-		$file     = QUEUE_HEALTH_MONITOR_PLUGIN_DIR . 'includes/' . str_replace( '\\', '/', $relative ) . '.php';
+		$file     = SCHEDSENSE_PLUGIN_DIR . 'includes/' . str_replace( '\\', '/', $relative ) . '.php';
 		if ( is_readable( $file ) ) {
 			require_once $file;
 		}

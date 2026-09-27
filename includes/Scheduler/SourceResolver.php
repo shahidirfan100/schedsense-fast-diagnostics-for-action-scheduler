@@ -5,7 +5,7 @@
  * @package SchedSense
  */
 
-namespace QueueHealthMonitor\Scheduler;
+namespace SchedSense\Scheduler;
 
 use ReflectionException;
 use ReflectionFunction;
@@ -30,7 +30,7 @@ final class SourceResolver {
 			return $this->unknown();
 		}
 
-		$cache = get_transient( 'qhm_source_map' );
+		$cache = get_transient( 'schedsense_source_map' );
 		$cache = is_array( $cache ) ? $cache : array();
 		if ( isset( $cache[ $hook ] ) && is_array( $cache[ $hook ] ) ) {
 			return $cache[ $hook ];
@@ -45,7 +45,7 @@ final class SourceResolver {
 		if ( count( $cache ) > 300 ) {
 			$cache = array_slice( $cache, -300, null, true );
 		}
-		set_transient( 'qhm_source_map', $cache, DAY_IN_SECONDS );
+		set_transient( 'schedsense_source_map', $cache, DAY_IN_SECONDS );
 		return $result;
 	}
 
@@ -117,31 +117,38 @@ final class SourceResolver {
 	 * @return array|null
 	 */
 	private function from_file( $file ) {
-		$roots = array(
-			wp_normalize_path( WP_PLUGIN_DIR )   => 'plugin',
-			wp_normalize_path( WPMU_PLUGIN_DIR ) => 'mu-plugin',
-		);
-
-		foreach ( $roots as $root => $type ) {
-			$relative = self::normalize_plugin_path( $file, $root );
-			if ( '' === $relative ) {
-				continue;
-			}
-			$slug = strtok( $relative, '/' );
-			$name = $this->plugin_name_for_slug( $slug );
-			return array(
-				'name'       => '' !== $name ? $name : ucwords( str_replace( array( '-', '_' ), ' ', $slug ) ),
-				'confidence' => 'high',
-				'evidence'   => sprintf(
-					/* translators: %s: Redacted plugin-relative callback path. */
-					__( 'Registered callback file: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ),
-					$relative
-				),
-				'path'       => $relative,
-				'type'       => $type,
-			);
+		$file     = wp_normalize_path( (string) $file );
+		$relative = wp_normalize_path( plugin_basename( $file ) );
+		if ( '' === $relative || $relative === $file || 0 === strpos( $relative, '/' ) || preg_match( '/^[A-Z]:\//i', $relative ) ) {
+			return null;
 		}
-		return null;
+
+		$slug = strtok( $relative, '/' );
+		if ( ! is_string( $slug ) || '' === $slug || '..' === $slug || '.' === $slug ) {
+			return null;
+		}
+
+		$name = $this->plugin_name_for_slug( $slug );
+		$type = 'plugin';
+		if ( '' === $name ) {
+			$name = $this->mu_plugin_name_for_basename( $relative );
+			$type = 'mu-plugin';
+		}
+		if ( '' === $name ) {
+			return null;
+		}
+
+		return array(
+			'name'       => $name,
+			'confidence' => 'high',
+			'evidence'   => sprintf(
+				/* translators: %s: Redacted plugin-relative callback path. */
+				__( 'Registered callback file: %s', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				$relative
+			),
+			'path'       => $relative,
+			'type'       => $type,
+		);
 	}
 
 	/**
@@ -168,11 +175,33 @@ final class SourceResolver {
 	 */
 	private function plugin_name_for_slug( $slug ) {
 		if ( null === $this->plugins ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+			if ( ! function_exists( 'get_plugins' ) ) {
+				return '';
+			}
 			$this->plugins = get_plugins();
 		}
 		foreach ( $this->plugins as $basename => $data ) {
 			if ( strtok( $basename, '/' ) === $slug ) {
+				return isset( $data['Name'] ) ? wp_strip_all_tags( $data['Name'] ) : '';
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * Resolve the display name of a registered must-use plugin.
+	 *
+	 * @param string $basename Plugin-relative callback path.
+	 * @return string
+	 */
+	private function mu_plugin_name_for_basename( $basename ) {
+		if ( ! function_exists( 'get_mu_plugins' ) ) {
+			return '';
+		}
+		$slug    = strtok( $basename, '/' );
+		$plugins = get_mu_plugins();
+		foreach ( $plugins as $plugin_file => $data ) {
+			if ( $plugin_file === $basename || $slug === $plugin_file || $slug === pathinfo( $plugin_file, PATHINFO_FILENAME ) ) {
 				return isset( $data['Name'] ) ? wp_strip_all_tags( $data['Name'] ) : '';
 			}
 		}
