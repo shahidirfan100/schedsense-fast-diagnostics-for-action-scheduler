@@ -3,7 +3,7 @@ Contributors: shahidirfan100
 Tags: cron, diagnostics, queue, troubleshooting, site health
 Requires at least: 6.8
 Tested up to: 7.1
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -79,6 +79,10 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 
 == Changelog ==
 
+= 1.0.4 =
+* Make nonce verification explicit in each read-only GET filter handler.
+* Document the WordPress core API used for the local wp-cron.php endpoint.
+
 = 1.0.3 =
 * Hardened diagnostic request context and nonce-protected queue filters.
 * Updated plugin identifiers and WordPress path resolution for the SchedSense brand.
@@ -98,5 +102,5 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 
 == Upgrade Notice ==
 
-= 1.0.3 =
-Hardens diagnostic request handling, sanitizes loopback credentials, and uses WordPress path APIs for plugin and content locations.
+= 1.0.4 =
+Makes view-filter nonce checks explicit for security review and documents the canonical WordPress loopback endpoint.

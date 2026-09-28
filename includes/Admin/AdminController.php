@@ -356,24 +356,17 @@ final class AdminController {
 		return $this->request_enum( 'schedsense_notice', array( 'refreshed', 'cache-cleared', 'cron-spawned', 'cron-not-spawned', 'action-deleted', 'action-no-longer-failed', 'action-delete-unavailable', 'action-delete-error' ), '' );
 	}
 
-	/** Verify the nonce included with read-only view filters and navigation. */
-	private function has_valid_view_nonce() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The nonce is sanitized and verified below before any read-only GET value is used.
-		if ( ! isset( $_GET['_wpnonce'] ) || ! is_string( $_GET['_wpnonce'] ) ) {
-			return false;
-		}
-
-		$nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
-		return (bool) wp_verify_nonce( $nonce, 'schedsense_view' );
-	}
-
 	/** @return string */
 	private function request_text( $key ) {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The read-only view nonce is checked before its GET value is accessed.
-		if ( ! $this->has_valid_view_nonce() ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Verify the view nonce in this reader before using its GET filter.
+		if ( ! isset( $_GET['_wpnonce'] ) || ! is_string( $_GET['_wpnonce'] ) ) {
 			return '';
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified above before reading this GET value.
+		$nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
+		if ( ! wp_verify_nonce( $nonce, 'schedsense_view' ) ) {
+			return '';
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified in this method before reading the GET filter.
 		if ( ! isset( $_GET[ $key ] ) ) {
 			return '';
 		}
@@ -392,11 +385,15 @@ final class AdminController {
 	/** @return int */
 	private function request_positive_int( $key, $fallback ) {
 		$value = absint( $fallback );
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The read-only view nonce is checked before its GET value is accessed.
-		if ( ! $this->has_valid_view_nonce() ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Verify the view nonce in this reader before using its GET filter.
+		if ( ! isset( $_GET['_wpnonce'] ) || ! is_string( $_GET['_wpnonce'] ) ) {
 			return max( 1, $value );
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified above before reading this GET value.
+		$nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
+		if ( ! wp_verify_nonce( $nonce, 'schedsense_view' ) ) {
+			return max( 1, $value );
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified in this method before reading the GET filter.
 		if ( isset( $_GET[ $key ] ) ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The view nonce is checked above; value is unslashed and scalar-checked before absint().
 			$raw = wp_unslash( $_GET[ $key ] );
@@ -410,11 +407,15 @@ final class AdminController {
 	/** @return string */
 	private function request_enum( $key, array $allowed, $fallback ) {
 		$value = $fallback;
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The read-only view nonce is checked before its GET value is accessed.
-		if ( ! $this->has_valid_view_nonce() ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Verify the view nonce in this reader before using its GET filter.
+		if ( ! isset( $_GET['_wpnonce'] ) || ! is_string( $_GET['_wpnonce'] ) ) {
 			return $fallback;
 		}
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified above before reading this GET value.
+		$nonce = sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) );
+		if ( ! wp_verify_nonce( $nonce, 'schedsense_view' ) ) {
+			return $fallback;
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- The view nonce is verified in this method before reading the GET filter.
 		if ( isset( $_GET[ $key ] ) ) {
 			// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- The view nonce is checked above; value is unslashed, scalar-checked, and sanitized with sanitize_key() before use.
 			$raw = wp_unslash( $_GET[ $key ] );

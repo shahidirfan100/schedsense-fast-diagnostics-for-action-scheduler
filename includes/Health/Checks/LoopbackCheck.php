@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 final class LoopbackCheck implements HealthCheckInterface {
 	/** @inheritDoc */
 	public function run( array $context ) {
-		// Resolve the core endpoint from the configured site URL, including subdirectory installs.
+		// WordPress core's spawn_cron() uses this same API and endpoint; it preserves subdirectory installs.
 		$url      = site_url( 'wp-cron.php' );
 		$body     = array( 'site-health' => 'loopback-test' );
 		$cookies  = RequestContext::cookies_for_site_request();
