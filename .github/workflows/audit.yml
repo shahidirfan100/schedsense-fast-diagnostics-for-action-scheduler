@@ -64,8 +64,6 @@ jobs:
           --health-cmd="healthcheck.sh --connect --innodb_initialized"
           --health-interval=5s --health-timeout=5s --health-retries=12
     env:
-      WP_CLI_CACHE_DIR: ${{ runner.temp }}/wp-cli-cache
-      WP_ROOT: ${{ runner.temp }}/wordpress
       WP_URL: http://127.0.0.1:8080
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -80,9 +78,14 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: schedsense-plugin
+      - name: Set test paths
+        shell: bash
+        run: |
+          echo "WP_CLI_CACHE_DIR=$RUNNER_TEMP/wp-cli-cache" >> "$GITHUB_ENV"
+          echo "WP_ROOT=$RUNNER_TEMP/wordpress" >> "$GITHUB_ENV"
       - name: Install WordPress and the packaged plugin
         env:
-          DB_PORT: ${{ job.services.mariadb.ports[3306] }}
+          DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
           WORDPRESS_VERSION: ${{ matrix.wordpress }}
         shell: bash
         run: |
