@@ -208,9 +208,10 @@ final class ActionAnalyzer {
 			)
 		);
 
-		$sources = array();
+		$hook_sources = $this->resolver->resolve_many( array_column( $sample, 'hook' ) );
+		$sources      = array();
 		foreach ( $sample as $action ) {
-			$source = $this->resolver->resolve( $action['hook'] );
+			$source = $hook_sources[ $action['hook'] ];
 			$key    = $source['name'];
 			if ( ! isset( $sources[ $key ] ) ) {
 				$sources[ $key ] = array(

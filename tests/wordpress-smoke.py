@@ -82,7 +82,9 @@ def main():
     fixture = ROOT / "wp-content/mu-plugins/schedsense-ci-queue.php"
     fixture.parent.mkdir(exist_ok=True)
     fixture.write_text("<?php\nadd_filter('action_scheduler_allow_async_request_runner', '__return_false');\n")
-    wp("plugin", "install", "action-scheduler", "--activate")
+    scheduler = os.environ["ACTION_SCHEDULER_VERSION"]
+    version = () if scheduler == "latest" else (f"--version={scheduler}",)
+    wp("plugin", "install", "action-scheduler", *version, "--activate")
     wp("eval", """
         $store = ActionScheduler::store();
         $failed = as_schedule_single_action(time() + 3600, 'ci_failed', array('ci_private_argument'), 'schedsense-ci');
@@ -94,6 +96,23 @@ def main():
         as_schedule_single_action(time() - 7200, 'ci_older', array(), 'schedsense-ci');
         update_option('schedsense_ci_action_ids', array('failed' => $failed, 'future' => $future), false);
     """)
+    print(wp("eval", """
+        delete_transient('schedsense_source_map');
+        $writes = 0;
+        add_filter('pre_set_transient_schedsense_source_map', static function ($value) use (&$writes) {
+            ++$writes;
+            return $value;
+        });
+        $resolver = new SchedSense\\Scheduler\\SourceResolver();
+        $hooks = array_map(static function ($i) { return 'ci_source_' . $i; }, range(1, 300));
+        $cold = $resolver->resolve_many($hooks);
+        $warm = $resolver->resolve_many($hooks);
+        if (count($cold) !== 300 || $cold !== $warm || $writes !== 1) {
+            exit(1);
+        }
+        delete_transient('schedsense_source_map');
+        echo 'Source cache used one write for 300 cold hooks and zero writes when warm.';
+    """))
     failed, future = (wp("option", "pluck", "schedsense_ci_action_ids", key)
                       for key in ("failed", "future"))
     overview = post(admin, overview, "schedsense_refresh")
@@ -111,6 +130,7 @@ def main():
     page_two = request(admin, link(recent, "paged=2"))
     assert "Showing 1 of 26 matching actions." in page_two
     assert page_two.count("<code>ci_recent</code>") == 1
+    assert request(admin, link(page_two, "paged=1")).count("<code>ci_recent</code>") == 25
 
     sources = request(admin, link(overview, "tab=sources"))
     assert "ci_failed" in sources

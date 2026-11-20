@@ -228,9 +228,9 @@ final class AdminController {
 		if ( $this->adapter->has_query_error() ) {
 			return $this->failure_data_unavailable( $status, $hook, $group, $age, 'query-failed' );
 		}
-		$resolver = new SourceResolver();
+		$sources = ( new SourceResolver() )->resolve_many( array_column( $actions, 'hook' ) );
 		foreach ( $actions as &$action ) {
-			$action['source'] = $resolver->resolve( $action['hook'] );
+			$action['source'] = $sources[ $action['hook'] ];
 		}
 		unset( $action );
 

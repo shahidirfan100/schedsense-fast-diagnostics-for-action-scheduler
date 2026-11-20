@@ -105,7 +105,7 @@ if ( empty( $failure_data['available'] ) ) {
 		echo wp_kses_post(
 			paginate_links(
 				array(
-					'base'    => wp_nonce_url( add_query_arg( 'paged', '%#%' ), 'schedsense_view' ),
+					'base'    => add_query_arg( array( '_wpnonce' => wp_create_nonce( 'schedsense_view' ), 'paged' => '%#%' ) ),
 					'format'  => '',
 					'current' => $failure_data['page'],
 					'total'   => $schedsense_total_pages,
