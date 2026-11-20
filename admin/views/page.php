@@ -68,10 +68,12 @@ $tabs = array(
 		}
 		?>
 	</main>
-	<footer class="schedsense-footer">
-		<?php
-		/* translators: %s: Date and time when the diagnostic snapshot was generated. */
-		echo esc_html( sprintf( __( 'Snapshot generated %s. Queue source totals are a bounded sample of up to 300 relevant actions.', 'schedsense-fast-diagnostics-for-action-scheduler' ), wp_date( 'Y-m-d H:i:s T', $snapshot['generated_at'] ) ) );
-		?>
-	</footer>
+	<?php if ( isset( $snapshot ) ) : ?>
+		<footer class="schedsense-footer">
+			<?php
+			/* translators: %s: Date and time when the diagnostic snapshot was generated. */
+			echo esc_html( sprintf( __( 'Snapshot generated %s. Queue source totals are a bounded sample of up to 300 relevant actions.', 'schedsense-fast-diagnostics-for-action-scheduler' ), wp_date( 'Y-m-d H:i:s T', $snapshot['generated_at'] ) ) );
+			?>
+		</footer>
+	<?php endif; ?>
 </div>

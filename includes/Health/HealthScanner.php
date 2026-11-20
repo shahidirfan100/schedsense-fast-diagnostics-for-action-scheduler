@@ -12,6 +12,7 @@ use SchedSense\Health\Checks\CronCheck;
 use SchedSense\Health\Checks\FailedActionsCheck;
 use SchedSense\Health\Checks\LoopbackCheck;
 use SchedSense\Health\Checks\OverdueActionsCheck;
+use SchedSense\Health\Checks\QueueRunnerCheck;
 use SchedSense\Health\Checks\RestApiCheck;
 use SchedSense\Health\Checks\StuckActionsCheck;
 use SchedSense\Scheduler\ActionSchedulerAdapter;
@@ -56,7 +57,10 @@ final class HealthScanner {
 			new LoopbackCheck(),
 			new RestApiCheck(),
 		);
-		$results     = array();
+		if ( ! empty( $queue['available'] ) ) {
+			$checks[] = new QueueRunnerCheck();
+		}
+		$results = array();
 
 		foreach ( $checks as $check ) {
 			try {

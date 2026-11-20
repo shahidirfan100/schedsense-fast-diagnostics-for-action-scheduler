@@ -100,6 +100,32 @@ def main():
         }
     """)
 
+    wp("eval", """
+        $diagnosis = new SchedSense\\Diagnosis\\DiagnosisEngine();
+        $snapshot = array(
+            'queue' => array(
+                'available' => true,
+                'data_available' => true,
+                'counts' => array('failed' => 0, 'stuck_in_progress' => 0, 'overdue_1h' => 20, 'overdue_24h' => 0),
+            ),
+            'checks' => array(),
+            'environment' => array(),
+        );
+        if ($diagnosis->diagnose($snapshot)['status'] !== 'warning') {
+            exit(1);
+        }
+        $snapshot['queue']['counts']['overdue_1h'] = 0;
+        $snapshot['queue']['counts']['failed'] = 10;
+        $snapshot['queue']['failure_sample'] = array('total' => 10, 'top' => 0);
+        if ($diagnosis->diagnose($snapshot)['confidence'] !== 'Possible') {
+            exit(1);
+        }
+        $snapshot['queue']['failure_sample']['top'] = 8;
+        if ($diagnosis->diagnose($snapshot)['confidence'] !== 'Likely') {
+            exit(1);
+        }
+    """)
+
     wp("user", "create", "auditmember", "member@example.test", "--role=subscriber",
        f"--user_pass={PASSWORD}")
     expect_http_error(login("auditmember"), PAGE, 403)
@@ -143,6 +169,14 @@ def main():
                       for key in ("failed", "future"))
     overview = post(admin, overview, "schedsense_refresh")
     assert 'id="schedsense-queue-title"' in overview
+    assert "Action Scheduler WP-Cron runner" in overview
+    assert "Scheduled time:" in overview
+    wp("eval", """
+        $queue = get_transient('schedsense_diagnostic_snapshot')['queue'];
+        if ($queue['failure_sample'] !== array('total' => 1, 'top' => 0)) {
+            exit(1);
+        }
+    """)
     actions_url = link(overview, "tab=failures")
     failures = request(admin, actions_url)
     assert "<code>ci_failed</code>" in failures

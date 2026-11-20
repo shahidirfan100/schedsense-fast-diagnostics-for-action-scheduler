@@ -82,16 +82,19 @@ final class AdminController {
 			wp_die( esc_html__( 'You do not have permission to access SchedSense.', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 		}
 
-		$tab       = $this->request_tab();
-		$snapshot  = $this->get_snapshot();
-		$diagnosis = ( new DiagnosisEngine() )->diagnose( $snapshot );
-		$notice    = $this->request_notice();
+		$tab    = $this->request_tab();
+		$notice = $this->request_notice();
 
 		if ( 'failures' === $tab ) {
 			$failure_data = $this->get_failure_data();
-		}
-		if ( 'report' === $tab ) {
-			$report = ( new ReportBuilder() )->build( $snapshot, $diagnosis );
+		} else {
+			$snapshot = $this->get_snapshot();
+			if ( 'sources' !== $tab ) {
+				$diagnosis = ( new DiagnosisEngine() )->diagnose( $snapshot );
+			}
+			if ( 'report' === $tab ) {
+				$report = ( new ReportBuilder() )->build( $snapshot, $diagnosis );
+			}
 		}
 
 		require SCHEDSENSE_PLUGIN_DIR . 'admin/views/page.php';

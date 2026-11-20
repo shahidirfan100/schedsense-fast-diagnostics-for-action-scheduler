@@ -39,7 +39,6 @@ final class ActionAnalyzer {
 				'available'      => false,
 				'data_available' => false,
 				'counts'         => array(),
-				'oldest'         => array(),
 				'sources'        => array(),
 			);
 		}
@@ -111,27 +110,7 @@ final class ActionAnalyzer {
 			return $this->unavailable_queue();
 		}
 
-		$oldest_pending = $this->adapter->query(
-			array(
-				'status'   => 'pending',
-				'per_page' => 1,
-				'orderby'  => 'date',
-				'order'    => 'ASC',
-			)
-		);
-		$oldest_failed  = $this->adapter->query(
-			array(
-				'status'   => 'failed',
-				'per_page' => 1,
-				'orderby'  => 'date',
-				'order'    => 'ASC',
-			)
-		);
-		if ( $this->adapter->has_query_error() ) {
-			return $this->unavailable_queue();
-		}
-
-		$sources = $this->source_sample();
+		$sample = $this->source_sample( $threshold['overdue_1h'] );
 		if ( $this->adapter->has_query_error() ) {
 			return $this->unavailable_queue();
 		}
@@ -140,11 +119,8 @@ final class ActionAnalyzer {
 			'available'      => true,
 			'data_available' => true,
 			'counts'         => $counts,
-			'oldest'         => array(
-				'pending' => isset( $oldest_pending[0] ) ? $oldest_pending[0] : array(),
-				'failed'  => isset( $oldest_failed[0] ) ? $oldest_failed[0] : array(),
-			),
-			'sources'        => $sources,
+			'sources'        => $sample['sources'],
+			'failure_sample' => $sample['failures'],
 		);
 	}
 
@@ -166,7 +142,6 @@ final class ActionAnalyzer {
 			'available'      => true,
 			'data_available' => false,
 			'counts'         => array(),
-			'oldest'         => array(),
 			'sources'        => array(),
 		);
 	}
@@ -176,7 +151,7 @@ final class ActionAnalyzer {
 	 *
 	 * @return array
 	 */
-	private function source_sample() {
+	private function source_sample( $cutoff ) {
 		$sample = array_merge(
 			$this->adapter->query(
 				array(
@@ -189,7 +164,7 @@ final class ActionAnalyzer {
 			$this->adapter->query(
 				array(
 					'status'       => 'pending',
-					'date'         => $this->utc_date( time() - HOUR_IN_SECONDS ),
+					'date'         => $this->utc_date( $cutoff ),
 					'date_compare' => '<=',
 					'per_page'     => 100,
 					'orderby'      => 'date',
@@ -199,7 +174,7 @@ final class ActionAnalyzer {
 			$this->adapter->query(
 				array(
 					'status'           => 'in-progress',
-					'modified'         => $this->utc_date( time() - HOUR_IN_SECONDS ),
+					'modified'         => $this->utc_date( $cutoff ),
 					'modified_compare' => '<=',
 					'per_page'         => 100,
 					'orderby'          => 'modified',
@@ -210,9 +185,18 @@ final class ActionAnalyzer {
 
 		$hook_sources = $this->resolver->resolve_many( array_column( $sample, 'hook' ) );
 		$sources      = array();
+		$failures     = 0;
+		$attributed   = array();
 		foreach ( $sample as $action ) {
 			$source = $hook_sources[ $action['hook'] ];
 			$key    = $source['name'];
+			if ( 'failed' === $action['status'] ) {
+				++$failures;
+				if ( 'high' === $source['confidence'] && ! empty( $source['path'] ) ) {
+					$owner                = $source['type'] . ':' . explode( '/', $source['path'], 2 )[0];
+					$attributed[ $owner ] = ( $attributed[ $owner ] ?? 0 ) + 1;
+				}
+			}
 			if ( ! isset( $sources[ $key ] ) ) {
 				$sources[ $key ] = array(
 					'name'       => $source['name'],
@@ -231,7 +215,7 @@ final class ActionAnalyzer {
 			} else {
 				++$sources[ $key ][ $action['status'] ];
 			}
-			if ( 'pending' === $action['status'] && $action['scheduled'] < time() - HOUR_IN_SECONDS ) {
+			if ( 'pending' === $action['status'] && $action['scheduled'] > 0 && $action['scheduled'] <= $cutoff ) {
 				++$sources[ $key ]['past_due'];
 			}
 			$sources[ $key ]['hooks'][ $action['hook'] ] = isset( $sources[ $key ]['hooks'][ $action['hook'] ] ) ? $sources[ $key ]['hooks'][ $action['hook'] ] + 1 : 1;
@@ -243,6 +227,12 @@ final class ActionAnalyzer {
 				return ( $right['failed'] + $right['past_due'] + $right['stuck'] ) <=> ( $left['failed'] + $left['past_due'] + $left['stuck'] );
 			}
 		);
-		return array_slice( $sources, 0, 10 );
+		return array(
+			'sources'  => array_slice( $sources, 0, 10 ),
+			'failures' => array(
+				'total' => $failures,
+				'top'   => $attributed ? max( $attributed ) : 0,
+			),
+		);
 	}
 }

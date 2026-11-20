@@ -57,9 +57,11 @@ final class DiagnosisEngine {
 			return $this->result( $status, __( 'Attention Needed', 'schedsense-fast-diagnostics-for-action-scheduler' ), $message, __( 'Possible', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 		}
 
-		$concentration = $this->failure_concentration( $snapshot['queue']['sources'] );
-		if ( $counts['failed'] >= 5 && $concentration >= 0.8 && 0 === $counts['overdue_24h'] ) {
-			return $this->result( 'warning', __( 'Attention Needed', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'Most sampled failures come from one source while the pending queue remains current. The scheduler appears operational; the owning callback is the more likely fault domain.', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'Likely', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
+		$sample = $snapshot['queue']['failure_sample'] ?? array( 'total' => 0, 'top' => 0 );
+		if ( $sample['total'] >= 5 && $sample['top'] * 5 >= $sample['total'] * 4 && 0 === $counts['overdue_1h'] ) {
+			/* translators: 1: Failures matched to the top source, 2: All sampled failures. */
+			$message = sprintf( __( '%1$d of %2$d sampled failures trace to callbacks registered by one plugin. No pending action is over an hour overdue. Inspect those action logs and the callback before changing the queue runner.', 'schedsense-fast-diagnostics-for-action-scheduler' ), $sample['top'], $sample['total'] );
+			return $this->result( 'warning', __( 'Attention Needed', 'schedsense-fast-diagnostics-for-action-scheduler' ), $message, __( 'Likely', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 		}
 
 		if ( $counts['failed'] > 0 && 0 === $counts['overdue_1h'] ) {
@@ -74,11 +76,14 @@ final class DiagnosisEngine {
 			return $this->result( 'warning', __( 'Attention Needed', 'schedsense-fast-diagnostics-for-action-scheduler' ), $message, __( 'Possible', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 		}
 
-		if ( 0 === $counts['overdue_24h'] && $counts['failed'] < 5 ) {
-			return $this->result( 'healthy', __( 'Healthy', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'No significant scheduler problem was detected. A few recent or slightly delayed actions can be normal on traffic-triggered cron.', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'Informational', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
+		if ( $counts['overdue_1h'] > 0 ) {
+			$count = $counts['overdue_1h'];
+			/* translators: %d: Number of actions pending over an hour after their scheduled time. */
+			$message = sprintf( _n( '%d action is at least an hour overdue. Compare its hook and the queue runner evidence before deciding where it stalled.', '%d actions are at least an hour overdue. Compare their hooks and the queue runner evidence before deciding where they stalled.', $count, 'schedsense-fast-diagnostics-for-action-scheduler' ), $count );
+			return $this->result( 'warning', __( 'Attention Needed', 'schedsense-fast-diagnostics-for-action-scheduler' ), $message, __( 'Confirmed', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 		}
 
-		return $this->result( 'warning', __( 'Attention Needed', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'The queue has warning signals, but the available evidence does not isolate one cause. Compare overdue age, failed hooks, and environment checks before making changes.', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'Possible', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
+		return $this->result( 'healthy', __( 'Healthy', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'No significant scheduler problem was detected. A few recent or slightly delayed actions can be normal on traffic-triggered cron.', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'Informational', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 	}
 
 	/** @return array|null */
@@ -89,18 +94,6 @@ final class DiagnosisEngine {
 			}
 		}
 		return null;
-	}
-
-	/** @return float */
-	private function failure_concentration( array $sources ) {
-		$total = 0;
-		$max   = 0;
-		foreach ( $sources as $source ) {
-			$count  = isset( $source['failed'] ) ? absint( $source['failed'] ) : 0;
-			$total += $count;
-			$max    = max( $max, $count );
-		}
-		return $total > 0 ? $max / $total : 0.0;
 	}
 
 	/** @return array */
