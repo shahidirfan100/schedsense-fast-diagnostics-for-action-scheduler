@@ -66,8 +66,16 @@ def main():
     admin = login("auditadmin")
     overview = request(admin, PAGE)
     assert 'class="wrap schedsense-wrap"' in overview
-    assert "The local wp-cron.php endpoint responded." in overview
-    assert "The local REST API post-type endpoint responded with valid data." in overview
+    probes = (
+        "The local wp-cron.php endpoint responded.",
+        "The local REST API post-type endpoint responded with valid data.",
+    )
+    # PHP's development server occasionally stalls a worker's own loopback.
+    for _ in range(2):
+        if all(probe in overview for probe in probes):
+            break
+        overview = post(admin, overview, "schedsense_refresh")
+    assert all(probe in overview for probe in probes), "Local HTTP probes did not complete"
     actions_url = link(overview, "tab=failures")
     assert "Action Scheduler is not available" in request(admin, actions_url)
     assert "Diagnostics refreshed." in post(admin, overview, "schedsense_refresh")
@@ -96,6 +104,32 @@ def main():
             }
         }
         if ($requests !== 2) {
+            exit(1);
+        }
+    """)
+
+    wp("eval", """
+        $diagnosis = new SchedSense\\Diagnosis\\DiagnosisEngine();
+        $snapshot = array(
+            'queue' => array(
+                'available' => true,
+                'data_available' => true,
+                'counts' => array('failed' => 0, 'stuck_in_progress' => 0, 'overdue_1h' => 20, 'overdue_24h' => 0),
+            ),
+            'checks' => array(),
+            'environment' => array(),
+        );
+        if ($diagnosis->diagnose($snapshot)['status'] !== 'warning') {
+            exit(1);
+        }
+        $snapshot['queue']['counts']['overdue_1h'] = 0;
+        $snapshot['queue']['counts']['failed'] = 10;
+        $snapshot['queue']['failure_sample'] = array('total' => 10, 'top' => 0);
+        if ($diagnosis->diagnose($snapshot)['confidence'] !== 'Possible') {
+            exit(1);
+        }
+        $snapshot['queue']['failure_sample']['top'] = 8;
+        if ($diagnosis->diagnose($snapshot)['confidence'] !== 'Likely') {
             exit(1);
         }
     """)
@@ -143,6 +177,14 @@ def main():
                       for key in ("failed", "future"))
     overview = post(admin, overview, "schedsense_refresh")
     assert 'id="schedsense-queue-title"' in overview
+    assert "Action Scheduler WP-Cron runner" in overview
+    assert "Scheduled time:" in overview
+    wp("eval", """
+        $queue = get_transient('schedsense_diagnostic_snapshot')['queue'];
+        if ($queue['failure_sample'] !== array('total' => 1, 'top' => 0)) {
+            exit(1);
+        }
+    """)
     actions_url = link(overview, "tab=failures")
     failures = request(admin, actions_url)
     assert "<code>ci_failed</code>" in failures

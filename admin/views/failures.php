@@ -1,7 +1,12 @@
 <?php
-/** @package SchedSense */
+/**
+ * Filtered queue list and individual failed-action controls.
+ *
+ * @package SchedSense
+ */
+
 defined( 'ABSPATH' ) || exit;
-$schedsense_age_labels = array(
+$schedsense_age_labels  = array(
 	'under_1h' => __( 'Under 1 hour', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 	'1_to_6h'  => __( '1–6 hours', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 	'6_to_24h' => __( '6–24 hours', 'schedsense-fast-diagnostics-for-action-scheduler' ),
@@ -62,30 +67,30 @@ if ( empty( $failure_data['available'] ) ) {
 	if ( empty( $failure_data['actions'] ) ) :
 		?>
 		<tr><td colspan="10"><?php echo esc_html__( 'No matching actions found.', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></td></tr><?php endif; ?>
-	<?php foreach ( $failure_data['actions'] as $action ) : ?>
+	<?php foreach ( $failure_data['actions'] as $schedsense_action ) : ?>
 		<?php
-		$schedsense_scheduled_in_future = $action['scheduled'] > time();
-		$schedsense_age_display         = ! $action['scheduled'] ? '—' : human_time_diff( $schedsense_scheduled_in_future ? time() : $action['scheduled'], $schedsense_scheduled_in_future ? $action['scheduled'] : time() );
-		if ( $schedsense_scheduled_in_future && $action['scheduled'] ) {
+		$schedsense_scheduled_in_future = $schedsense_action['scheduled'] > time();
+		$schedsense_age_display         = ! $schedsense_action['scheduled'] ? '—' : human_time_diff( $schedsense_scheduled_in_future ? time() : $schedsense_action['scheduled'], $schedsense_scheduled_in_future ? $schedsense_action['scheduled'] : time() );
+		if ( $schedsense_scheduled_in_future && $schedsense_action['scheduled'] ) {
 			/* translators: %s: Time until the action is scheduled. */
 			$schedsense_age_display = sprintf( __( 'In %s', 'schedsense-fast-diagnostics-for-action-scheduler' ), $schedsense_age_display );
-		} elseif ( $action['scheduled'] ) {
+		} elseif ( $schedsense_action['scheduled'] ) {
 			/* translators: %s: Time since the action was scheduled. */
 			$schedsense_age_display = sprintf( __( '%s ago', 'schedsense-fast-diagnostics-for-action-scheduler' ), $schedsense_age_display );
 		}
-		$schedsense_next_step = 'failed' === $action['status']
+		$schedsense_next_step = 'failed' === $schedsense_action['status']
 			? __( 'Review callback failure', 'schedsense-fast-diagnostics-for-action-scheduler' )
-			: ( 'not_due' === $action['age_bucket']
+			: ( 'not_due' === $schedsense_action['age_bucket']
 				? __( 'No action needed yet', 'schedsense-fast-diagnostics-for-action-scheduler' )
-				: ( 'in-progress' === $action['status']
+				: ( 'in-progress' === $schedsense_action['status']
 					? __( 'Check worker activity', 'schedsense-fast-diagnostics-for-action-scheduler' )
 					: __( 'Check queue source and cron', 'schedsense-fast-diagnostics-for-action-scheduler' ) ) );
 		?>
-		<tr><td class="schedsense-action-cell">#<?php echo esc_html( $action['id'] ); ?>
-			<?php if ( 'failed' === $action['status'] ) : ?>
+		<tr><td class="schedsense-action-cell">#<?php echo esc_html( $schedsense_action['id'] ); ?>
+			<?php if ( 'failed' === $schedsense_action['status'] ) : ?>
 				<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post" class="schedsense-delete-form" data-schedsense-confirm="<?php echo esc_attr__( 'Delete this failed action record? This cannot be undone and will not fix or retry its callback.', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?>">
 					<input type="hidden" name="action" value="schedsense_delete_failed_action">
-					<input type="hidden" name="action_id" value="<?php echo esc_attr( $action['id'] ); ?>">
+					<input type="hidden" name="action_id" value="<?php echo esc_attr( $schedsense_action['id'] ); ?>">
 					<input type="hidden" name="hook" value="<?php echo esc_attr( $failure_data['hook'] ); ?>">
 					<input type="hidden" name="group" value="<?php echo esc_attr( $failure_data['group'] ); ?>">
 					<?php wp_nonce_field( 'schedsense_delete_failed_action' ); ?>
@@ -93,10 +98,10 @@ if ( empty( $failure_data['available'] ) ) {
 					/* translators: %s: ID of the failed scheduled action. */
 					$schedsense_delete_label = __( 'Delete failed action #%s', 'schedsense-fast-diagnostics-for-action-scheduler' );
 					?>
-					<button type="submit" class="schedsense-delete-button button-link-delete" aria-label="<?php echo esc_attr( sprintf( $schedsense_delete_label, $action['id'] ) ); ?>"><?php echo esc_html__( 'Delete', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></button>
+					<button type="submit" class="schedsense-delete-button button-link-delete" aria-label="<?php echo esc_attr( sprintf( $schedsense_delete_label, $schedsense_action['id'] ) ); ?>"><?php echo esc_html__( 'Delete', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></button>
 				</form>
 			<?php endif; ?>
-		</td><td><code><?php echo esc_html( $action['hook'] ); ?></code></td><td><?php echo esc_html( $action['source']['name'] ); ?><small><?php echo esc_html( ucfirst( $action['source']['confidence'] ) ); ?></small></td><td><?php echo esc_html( ! empty( $action['group'] ) ? $action['group'] : '—' ); ?></td><td><?php echo esc_html( $action['scheduled'] ? wp_date( 'Y-m-d H:i:s', $action['scheduled'] ) : '—' ); ?></td><td><span class="schedsense-pill"><?php echo esc_html( $action['status'] ); ?></span></td><td><?php echo esc_html( $action['recurring'] ? __( 'Recurring', 'schedsense-fast-diagnostics-for-action-scheduler' ) : __( 'One-time', 'schedsense-fast-diagnostics-for-action-scheduler' ) ); ?></td><td><?php echo esc_html( $schedsense_age_display ); ?></td><td><?php echo esc_html( isset( $schedsense_age_labels[ $action['age_bucket'] ] ) ? $schedsense_age_labels[ $action['age_bucket'] ] : __( 'Unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ) ); ?></td><td><?php echo esc_html( $schedsense_next_step ); ?></td></tr>
+		</td><td><code><?php echo esc_html( $schedsense_action['hook'] ); ?></code></td><td><?php echo esc_html( $schedsense_action['source']['name'] ); ?><small><?php echo esc_html( ucfirst( $schedsense_action['source']['confidence'] ) ); ?></small></td><td><?php echo esc_html( ! empty( $schedsense_action['group'] ) ? $schedsense_action['group'] : '—' ); ?></td><td><?php echo esc_html( $schedsense_action['scheduled'] ? wp_date( 'Y-m-d H:i:s', $schedsense_action['scheduled'] ) : '—' ); ?></td><td><span class="schedsense-pill"><?php echo esc_html( $schedsense_action['status'] ); ?></span></td><td><?php echo esc_html( $schedsense_action['recurring'] ? __( 'Recurring', 'schedsense-fast-diagnostics-for-action-scheduler' ) : __( 'One-time', 'schedsense-fast-diagnostics-for-action-scheduler' ) ); ?></td><td><?php echo esc_html( $schedsense_age_display ); ?></td><td><?php echo esc_html( isset( $schedsense_age_labels[ $schedsense_action['age_bucket'] ] ) ? $schedsense_age_labels[ $schedsense_action['age_bucket'] ] : __( 'Unavailable', 'schedsense-fast-diagnostics-for-action-scheduler' ) ); ?></td><td><?php echo esc_html( $schedsense_next_step ); ?></td></tr>
 	<?php endforeach; ?>
 	</tbody></table></div>
 	<?php
@@ -105,7 +110,12 @@ if ( empty( $failure_data['available'] ) ) {
 		echo wp_kses_post(
 			paginate_links(
 				array(
-					'base'    => add_query_arg( array( '_wpnonce' => wp_create_nonce( 'schedsense_view' ), 'paged' => '%#%' ) ),
+					'base'    => add_query_arg(
+						array(
+							'_wpnonce' => wp_create_nonce( 'schedsense_view' ),
+							'paged'    => '%#%',
+						)
+					),
 					'format'  => '',
 					'current' => $failure_data['page'],
 					'total'   => $schedsense_total_pages,

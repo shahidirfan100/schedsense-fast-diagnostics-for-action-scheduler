@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$tabs = array(
+$schedsense_tabs = array(
 	'overview' => __( 'Overview', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 	'failures' => __( 'Actions', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 	'sources'  => __( 'Sources', 'schedsense-fast-diagnostics-for-action-scheduler' ),
@@ -38,7 +38,7 @@ $tabs = array(
 	<?php endif; ?>
 
 	<nav class="nav-tab-wrapper" aria-label="<?php echo esc_attr__( 'SchedSense sections', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?>">
-		<?php foreach ( $tabs as $schedsense_tab_key => $schedsense_tab_label ) : ?>
+		<?php foreach ( $schedsense_tabs as $schedsense_tab_key => $schedsense_tab_label ) : ?>
 			<?php
 			$schedsense_tab_url = wp_nonce_url(
 				add_query_arg(
@@ -68,10 +68,12 @@ $tabs = array(
 		}
 		?>
 	</main>
-	<footer class="schedsense-footer">
-		<?php
-		/* translators: %s: Date and time when the diagnostic snapshot was generated. */
-		echo esc_html( sprintf( __( 'Snapshot generated %s. Queue source totals are a bounded sample of up to 300 relevant actions.', 'schedsense-fast-diagnostics-for-action-scheduler' ), wp_date( 'Y-m-d H:i:s T', $snapshot['generated_at'] ) ) );
-		?>
-	</footer>
+	<?php if ( isset( $snapshot ) ) : ?>
+		<footer class="schedsense-footer">
+			<?php
+			/* translators: %s: Date and time when the diagnostic snapshot was generated. */
+			echo esc_html( sprintf( __( 'Snapshot generated %s. Queue source totals are a bounded sample of up to 300 relevant actions.', 'schedsense-fast-diagnostics-for-action-scheduler' ), wp_date( 'Y-m-d H:i:s T', $snapshot['generated_at'] ) ) );
+			?>
+		</footer>
+	<?php endif; ?>
 </div>

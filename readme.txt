@@ -3,7 +3,7 @@ Contributors: shahidirfan100
 Tags: cron, diagnostics, queue, troubleshooting, site health
 Requires at least: 6.8
 Tested up to: 7.1
-Stable tag: 1.0.5
+Stable tag: 1.0.6
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -19,7 +19,7 @@ SchedSense: Fast Diagnostics for Action Scheduler helps administrators investiga
 * Queue totals for pending, overdue, failed, in-progress, and completed actions.
 * Overdue-age buckets from one hour to seven days, with links to matching action lists.
 * Flags in-progress actions with no recorded update for over one hour as potentially stuck; long callbacks can be intentional.
-* Checks WP-Cron configuration, the local WordPress loopback, and the local REST API.
+* Checks WP-Cron configuration, the default Action Scheduler cron event, the local WordPress loopback, and the local REST API.
 * Attributes registered callbacks to likely source plugins using callback file metadata; uncertain matches are labelled.
 * Bounded, filterable action lists by status, age range, exact hook, and exact group. Action arguments are never displayed.
 * A confirmed, per-action delete control only for actions that are still failed. Deleting an entry does not repair or retry its callback.
@@ -78,6 +78,12 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 5. Copyable diagnostic report with queue data availability and privacy details.
 
 == Changelog ==
+
+= 1.0.6 =
+
+* Load the Actions tab without running a full health scan or loopback checks.
+* Show the default Action Scheduler cron event and its scheduled time.
+* Flag hour-old backlogs and require registered callback evidence before attributing failures to one plugin.
 
 = 1.0.5 =
 

@@ -16,6 +16,10 @@ Upload the `schedsense-fast-diagnostics-for-action-scheduler` plugin ZIP through
 
 The WordPress.org directory readme is in [`readme.txt`](readme.txt). Listing graphics and screenshots are in [`assets/wordpress.org/`](assets/wordpress.org/).
 
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for benchmark results, the competitor comparison, and planned improvements.
+
 ## Requirements
 
 - WordPress 6.8 or later
