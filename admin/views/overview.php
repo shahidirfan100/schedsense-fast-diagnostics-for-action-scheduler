@@ -1,5 +1,10 @@
 <?php
-/** @package SchedSense */
+/**
+ * Queue health, environment checks, and diagnostic controls.
+ *
+ * @package SchedSense
+ */
+
 defined( 'ABSPATH' ) || exit;
 $schedsense_counts = isset( $snapshot['queue']['counts'] ) ? $snapshot['queue']['counts'] : array();
 ?>
@@ -21,22 +26,31 @@ $schedsense_counts = isset( $snapshot['queue']['counts'] ) ? $snapshot['queue'][
 		<h2 id="schedsense-queue-title"><?php echo esc_html__( 'Queue', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></h2>
 		<div class="schedsense-metrics">
 			<?php
-			$schedsense_metrics = array(
-				'pending'     => __( 'Pending', 'schedsense-fast-diagnostics-for-action-scheduler' ),
-				'overdue_1h'  => __( 'Past due > 1 hour', 'schedsense-fast-diagnostics-for-action-scheduler' ),
-				'overdue_24h' => __( 'Past due > 24 hours', 'schedsense-fast-diagnostics-for-action-scheduler' ),
-				'failed'      => __( 'Failed', 'schedsense-fast-diagnostics-for-action-scheduler' ),
-				'in_progress' => __( 'In progress', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+			$schedsense_metrics        = array(
+				'pending'           => __( 'Pending', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				'overdue_1h'        => __( 'Past due > 1 hour', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				'overdue_24h'       => __( 'Past due > 24 hours', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				'failed'            => __( 'Failed', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				'in_progress'       => __( 'In progress', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 				'stuck_in_progress' => __( 'In progress > 1 hour', 'schedsense-fast-diagnostics-for-action-scheduler' ),
-				'complete'    => __( 'Completed', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				'complete'          => __( 'Completed', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 			);
 			$schedsense_metric_filters = array(
 				'pending'           => array( 'status' => 'pending' ),
-				'overdue_1h'        => array( 'status' => 'pending', 'age' => 'overdue_1h' ),
-				'overdue_24h'       => array( 'status' => 'pending', 'age' => 'overdue_24h' ),
+				'overdue_1h'        => array(
+					'status' => 'pending',
+					'age'    => 'overdue_1h',
+				),
+				'overdue_24h'       => array(
+					'status' => 'pending',
+					'age'    => 'overdue_24h',
+				),
 				'failed'            => array( 'status' => 'failed' ),
 				'in_progress'       => array( 'status' => 'in-progress' ),
-				'stuck_in_progress' => array( 'status' => 'in-progress', 'age' => 'stuck' ),
+				'stuck_in_progress' => array(
+					'status' => 'in-progress',
+					'age'    => 'stuck',
+				),
 				'complete'          => array( 'status' => 'complete' ),
 			);
 			foreach ( $schedsense_metrics as $schedsense_key => $schedsense_label ) :
@@ -59,11 +73,26 @@ $schedsense_counts = isset( $snapshot['queue']['counts'] ) ? $snapshot['queue'][
 			<strong><?php echo esc_html__( 'Due-action age:', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></strong>
 			<?php
 			$schedsense_age_buckets = array(
-				'under_1h'   => array( 'count' => 'under_1h', 'label' => __( 'Under 1 hour', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
-				'one_to_6h'  => array( 'count' => 'one_to_6h', 'label' => __( '1–6 hours', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
-				'six_to_24h' => array( 'count' => 'six_to_24h', 'label' => __( '6–24 hours', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
-				'one_to_7d'  => array( 'count' => 'one_to_7d', 'label' => __( '1–7 days', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
-				'overdue_7d' => array( 'count' => 'overdue_7d', 'label' => __( 'Over 7 days', 'schedsense-fast-diagnostics-for-action-scheduler' ) ),
+				'under_1h'   => array(
+					'count' => 'under_1h',
+					'label' => __( 'Under 1 hour', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				),
+				'one_to_6h'  => array(
+					'count' => 'one_to_6h',
+					'label' => __( '1–6 hours', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				),
+				'six_to_24h' => array(
+					'count' => 'six_to_24h',
+					'label' => __( '6–24 hours', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				),
+				'one_to_7d'  => array(
+					'count' => 'one_to_7d',
+					'label' => __( '1–7 days', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				),
+				'overdue_7d' => array(
+					'count' => 'overdue_7d',
+					'label' => __( 'Over 7 days', 'schedsense-fast-diagnostics-for-action-scheduler' ),
+				),
 			);
 			foreach ( $schedsense_age_buckets as $schedsense_age => $schedsense_bucket ) :
 				$schedsense_age_url = add_query_arg(

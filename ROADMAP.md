@@ -13,6 +13,19 @@
 - Action Scheduler pending jobs at least an hour late now produce a queue warning. A likely common source requires registered callback evidence for at least 80% of all sampled failures, including unresolved failures in the denominator.
 - The performance workflow compares five runs per combination of queue size, cache state, and view. It measures SQL statements, attempted HTTP calls, and median server-side rendering time on the same synthetic MariaDB data. Local HTTP responses are simulated in that benchmark. The separate smoke suite makes real loopback and REST requests.
 
+### Benchmark results
+
+The [performance audit](https://github.com/shahidirfan100/schedsense-fast-diagnostics-for-action-scheduler/actions/runs/44701254289) compared the 1.0.5 audit branch with the 1.0.6 performance changes on WordPress 7.1.5, PHP 8.4, and MariaDB 10.11.
+
+| Queue size | Cold view | SQL statements before → after | Median render time before → after |
+| --- | --- | ---: | ---: |
+| 10,000 | Filtered Actions | 694 → 56 | 83.4 → 21.6 ms |
+| 100,000 | Filtered Actions | 694 → 56 | 234.0 → 142.2 ms |
+| 100,000 | Deep Actions page | 692 → 56 | 257.2 → 145.5 ms |
+| 100,000 | Overview | 638 → 630 | 83.8 → 84.1 ms |
+
+The Actions view stopped attempting two HTTP calls on cold loads. The Overview still makes both calls and still reads the bounded queue samples. Redis, WooCommerce-bundled Action Scheduler, and multisite are future validation targets.
+
 ## Comparison
 
 | Product | Published strength | Implication for SchedSense |

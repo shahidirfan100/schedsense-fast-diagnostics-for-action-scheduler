@@ -49,6 +49,7 @@ jobs:
           - php: '7.4'
             wordpress: '6.8'
             action-scheduler: '3.9.3'
+            upgrade-from: '1.0.4'
           - php: '8.4'
             wordpress: latest
             action-scheduler: latest
@@ -91,6 +92,7 @@ jobs:
         env:
           DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
           WORDPRESS_VERSION: ${{ matrix.wordpress }}
+          UPGRADE_FROM: ${{ matrix.upgrade-from }}
         shell: bash
         run: |
           slug=schedsense-fast-diagnostics-for-action-scheduler
@@ -102,7 +104,14 @@ jobs:
           wp config set WP_DEBUG_DISPLAY false --raw
           wp config set DISABLE_WP_CRON true --raw
           wp core install --url="$WP_URL" --title=SchedSense --admin_user=auditadmin --admin_password=audit-only-password --admin_email=audit@example.test --skip-email
-          wp plugin install "$GITHUB_WORKSPACE/$slug.zip" --activate
+          if [[ -n "$UPGRADE_FROM" ]]; then
+            wp plugin install "$slug" --version="$UPGRADE_FROM" --activate
+            test "$(wp plugin get "$slug" --field=version)" = "$UPGRADE_FROM"
+          fi
+          wp plugin install "$GITHUB_WORKSPACE/$slug.zip" --force --activate
+          grep -Fx "Stable tag: $(wp plugin get "$slug" --field=version)" \
+            "wp-content/plugins/$slug/readme.txt"
+          test ! -e "wp-content/plugins/$slug/includes/Plugin.php"
           find "wp-content/plugins/$slug" -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Exercise admin and lifecycle with an isolated queue
         env:
@@ -124,16 +133,15 @@ jobs:
           wp plugin install "$GITHUB_WORKSPACE/$slug.zip" --force --activate
           wp plugin install plugin-check --activate
           wp plugin check "$slug" --format=table --require=./wp-content/plugins/plugin-check/cli.php
-      - name: Record WordPress Coding Standards findings
+      - name: Enforce WordPress Coding Standards
         if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.wordpress == 'latest' }}
         shell: bash
         run: |
           export COMPOSER_HOME="$RUNNER_TEMP/schedsense-composer"
           composer global config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
-          composer global require --no-interaction wp-coding-standards/wpcs:^3.2
+          composer global require --no-interaction wp-coding-standards/wpcs:3.4.1 squizlabs/php_codesniffer:3.13.6
           slug=schedsense-fast-diagnostics-for-action-scheduler
           "$COMPOSER_HOME/vendor/bin/phpcs" --standard=WordPress --extensions=php \
-            --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 \
             --report=summary --report-source="$RUNNER_TEMP/phpcs-sources.txt" \
             --report-full="$RUNNER_TEMP/phpcs-details.txt" "$WP_ROOT/wp-content/plugins/$slug"
       - name: Compare MariaDB queue performance

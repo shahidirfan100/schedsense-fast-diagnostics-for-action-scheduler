@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$tabs = array(
+$schedsense_tabs = array(
 	'overview' => __( 'Overview', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 	'failures' => __( 'Actions', 'schedsense-fast-diagnostics-for-action-scheduler' ),
 	'sources'  => __( 'Sources', 'schedsense-fast-diagnostics-for-action-scheduler' ),
@@ -38,7 +38,7 @@ $tabs = array(
 	<?php endif; ?>
 
 	<nav class="nav-tab-wrapper" aria-label="<?php echo esc_attr__( 'SchedSense sections', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?>">
-		<?php foreach ( $tabs as $schedsense_tab_key => $schedsense_tab_label ) : ?>
+		<?php foreach ( $schedsense_tabs as $schedsense_tab_key => $schedsense_tab_label ) : ?>
 			<?php
 			$schedsense_tab_url = wp_nonce_url(
 				add_query_arg(

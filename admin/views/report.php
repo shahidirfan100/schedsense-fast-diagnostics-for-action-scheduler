@@ -1,5 +1,10 @@
 <?php
-/** @package SchedSense */
+/**
+ * Copyable diagnostic report and its privacy information.
+ *
+ * @package SchedSense
+ */
+
 defined( 'ABSPATH' ) || exit;
 ?>
 <section class="schedsense-panel"><div class="schedsense-section-heading"><div><h2><?php echo esc_html__( 'Diagnostic report', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></h2><p><?php echo esc_html__( 'Copy this privacy-conscious report for a developer, host, or support engineer.', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></p></div><button type="button" class="button button-primary" data-schedsense-copy="schedsense-report"><?php echo esc_html__( 'Copy report', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></button></div><textarea id="schedsense-report" class="schedsense-report" readonly aria-label="<?php echo esc_attr__( 'SchedSense diagnostic report', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?>"><?php echo esc_textarea( $report ); ?></textarea><p class="description"><?php echo esc_html__( 'The report excludes action arguments, credentials, cookies, customer records, authorization data, and complete server paths.', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></p></section>

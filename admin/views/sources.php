@@ -1,5 +1,10 @@
 <?php
-/** @package SchedSense */
+/**
+ * Likely callback sources from the bounded queue sample.
+ *
+ * @package SchedSense
+ */
+
 defined( 'ABSPATH' ) || exit;
 ?>
 <section class="schedsense-panel"><h2><?php echo esc_html__( 'Top queue producers', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></h2><p><?php echo esc_html__( 'Counts are from bounded samples of up to 100 failed, 100 overdue pending, and 100 potentially stuck in-progress actions. They are sampled counts, not full-table totals.', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></p><div class="schedsense-table-wrap"><table class="widefat striped schedsense-table"><caption class="screen-reader-text"><?php echo esc_html__( 'Sampled problem queue sources', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></caption><thead><tr><th><?php echo esc_html__( 'Source', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Overdue pending sampled', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Failed sampled', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Potentially stuck sampled', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Confidence', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th><th><?php echo esc_html__( 'Top hook', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></th></tr></thead><tbody>

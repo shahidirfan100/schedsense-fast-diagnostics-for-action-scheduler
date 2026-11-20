@@ -1,6 +1,6 @@
 <?php
 /**
- * Small PSR-4 style autoloader for SchedSense classes.
+ * Load SchedSense classes from WordPress-style filenames.
  *
  * @package SchedSense
  */
@@ -16,8 +16,9 @@ spl_autoload_register(
 			return;
 		}
 
-		$relative = substr( $class_name, strlen( $prefix ) );
-		$file     = SCHEDSENSE_PLUGIN_DIR . 'includes/' . str_replace( '\\', '/', $relative ) . '.php';
+		$relative  = strtolower( str_replace( '\\', '/', substr( $class_name, strlen( $prefix ) ) ) );
+		$directory = dirname( $relative );
+		$file      = __DIR__ . '/' . ( '.' === $directory ? '' : $directory . '/' ) . 'class-' . basename( $relative ) . '.php';
 		if ( is_readable( $file ) ) {
 			require_once $file;
 		}
