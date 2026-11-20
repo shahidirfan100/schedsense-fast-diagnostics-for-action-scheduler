@@ -19,34 +19,45 @@ final class SourceResolver {
 	private $plugins;
 
 	/**
-	 * Resolve a hook using registered callback metadata only.
+	 * Resolve each hook using registered callback metadata and cache the batch.
 	 *
-	 * @param string $hook Hook name.
-	 * @return array
+	 * @param string[] $hooks Hook names.
+	 * @return array Sources keyed by hook name.
 	 */
-	public function resolve( $hook ) {
-		$hook = substr( sanitize_text_field( $hook ), 0, 191 );
-		if ( '' === $hook ) {
-			return $this->unknown();
+	public function resolve_many( array $hooks ) {
+		if ( ! $hooks ) {
+			return array();
 		}
 
-		$cache = get_transient( 'schedsense_source_map' );
-		$cache = is_array( $cache ) ? $cache : array();
-		if ( isset( $cache[ $hook ] ) && is_array( $cache[ $hook ] ) ) {
-			return $cache[ $hook ];
+		$cache   = get_transient( 'schedsense_source_map' );
+		$cache   = is_array( $cache ) ? $cache : array();
+		$changed = false;
+		$sources = array();
+
+		foreach ( $hooks as $hook ) {
+			if ( isset( $sources[ $hook ] ) ) {
+				continue;
+			}
+			$key = substr( sanitize_text_field( $hook ), 0, 191 );
+			if ( '' === $key ) {
+				$sources[ $hook ] = $this->unknown();
+				continue;
+			}
+			if ( ! isset( $cache[ $key ] ) || ! is_array( $cache[ $key ] ) ) {
+				$result = $this->inspect_registered_callbacks( $key );
+				if ( 'unknown' === $result['type'] ) {
+					$result = $this->infer_from_hook( $key );
+				}
+				$cache[ $key ] = $result;
+				$changed       = true;
+			}
+			$sources[ $hook ] = $cache[ $key ];
 		}
 
-		$result = $this->inspect_registered_callbacks( $hook );
-		if ( 'unknown' === $result['type'] ) {
-			$result = $this->infer_from_hook( $hook );
+		if ( $changed ) {
+			set_transient( 'schedsense_source_map', array_slice( $cache, -300, null, true ), DAY_IN_SECONDS );
 		}
-
-		$cache[ $hook ] = $result;
-		if ( count( $cache ) > 300 ) {
-			$cache = array_slice( $cache, -300, null, true );
-		}
-		set_transient( 'schedsense_source_map', $cache, DAY_IN_SECONDS );
-		return $result;
+		return $sources;
 	}
 
 	/**

@@ -30,8 +30,10 @@ final class RestApiCheck implements HealthCheckInterface {
 			$headers['Authorization'] = $authorization;
 		}
 
+		// Keep diagnostic credentials scoped to the original local endpoint.
+		$redirection = 0;
 		$started  = microtime( true );
-		$response = wp_remote_get( $url, compact( 'cookies', 'headers', 'timeout', 'sslverify' ) );
+		$response = wp_remote_get( $url, compact( 'cookies', 'headers', 'timeout', 'sslverify', 'redirection' ) );
 		$elapsed  = round( ( microtime( true ) - $started ) * 1000 );
 
 		if ( is_wp_error( $response ) ) {

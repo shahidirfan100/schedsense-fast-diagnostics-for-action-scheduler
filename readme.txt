@@ -3,7 +3,7 @@ Contributors: shahidirfan100
 Tags: cron, diagnostics, queue, troubleshooting, site health
 Requires at least: 6.8
 Tested up to: 7.1
-Stable tag: 1.0.4
+Stable tag: 1.0.5
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -78,6 +78,12 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 5. Copyable diagnostic report with queue data availability and privacy details.
 
 == Changelog ==
+
+= 1.0.5 =
+
+* Fixed pagination on the Actions tab so page links preserve the current filters.
+* Reduced cache writes when resolving sources for large action samples.
+* Local WP-Cron and REST checks now report redirects without forwarding diagnostic headers.
 
 = 1.0.4 =
 * Make nonce verification explicit in each read-only GET filter handler.

@@ -1,0 +1,147 @@
+name: WordPress plugin audit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build and inspect plugin ZIP
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Package tracked runtime files
+        shell: bash
+        run: |
+          slug=schedsense-fast-diagnostics-for-action-scheduler
+          git archive --format=zip --prefix="$slug/" -o "$slug.zip" HEAD \
+            "$slug.php" readme.txt uninstall.php admin includes languages
+          unzip -t "$slug.zip"
+          unzip -q "$slug.zip" -d dist
+          version=$(sed -nE 's/^ \* Version:[[:space:]]+([^[:space:]]+).*/\1/p' "dist/$slug/$slug.php")
+          test -n "$version"
+          grep -Fx "Stable tag: $version" "dist/$slug/readme.txt"
+          grep -Fx "define( 'SCHEDSENSE_VERSION', '$version' );" "dist/$slug/$slug.php"
+          node --check "dist/$slug/admin/js/schedsense-admin.js"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: schedsense-plugin
+          path: schedsense-fast-diagnostics-for-action-scheduler.zip
+          if-no-files-found: error
+
+  smoke:
+    name: WordPress ${{ matrix.wordpress }} / PHP ${{ matrix.php }}
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '7.4'
+            wordpress: '6.8'
+            action-scheduler: '3.9.3'
+          - php: '8.4'
+            wordpress: latest
+            action-scheduler: latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: wordpress
+          MARIADB_USER: wordpress
+          MARIADB_PASSWORD: wordpress
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=12
+    env:
+      WP_URL: http://127.0.0.1:8080
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, curl, dom, mbstring, zip
+          tools: wp-cli
+          coverage: none
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: schedsense-plugin
+      - name: Set test paths
+        shell: bash
+        run: |
+          echo "WP_CLI_CACHE_DIR=$RUNNER_TEMP/wp-cli-cache" >> "$GITHUB_ENV"
+          echo "WP_ROOT=$RUNNER_TEMP/wordpress" >> "$GITHUB_ENV"
+      - name: Install WordPress and the packaged plugin
+        id: install
+        env:
+          DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
+          WORDPRESS_VERSION: ${{ matrix.wordpress }}
+        shell: bash
+        run: |
+          slug=schedsense-fast-diagnostics-for-action-scheduler
+          wp --path="$WP_ROOT" core download --version="$WORDPRESS_VERSION"
+          cd "$WP_ROOT"
+          wp config create --dbname=wordpress --dbuser=wordpress --dbpass=wordpress --dbhost="127.0.0.1:$DB_PORT"
+          wp config set WP_DEBUG true --raw
+          wp config set WP_DEBUG_LOG true --raw
+          wp config set WP_DEBUG_DISPLAY false --raw
+          wp config set DISABLE_WP_CRON true --raw
+          wp core install --url="$WP_URL" --title=SchedSense --admin_user=auditadmin --admin_password=audit-only-password --admin_email=audit@example.test --skip-email
+          wp plugin install "$GITHUB_WORKSPACE/$slug.zip" --activate
+          find "wp-content/plugins/$slug" -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Exercise admin and lifecycle with an isolated queue
+        env:
+          ACTION_SCHEDULER_VERSION: ${{ matrix.action-scheduler }}
+        shell: bash
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8080 -t "$WP_ROOT" > "$RUNNER_TEMP/wordpress-http.log" 2>&1 &
+          for attempt in {1..20}; do
+            if curl -fs -o /dev/null "$WP_URL/wp-login.php"; then break; fi
+            sleep 1
+          done
+          python3 tests/wordpress-smoke.py
+      - name: Check plugin directory rules
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.wordpress == 'latest' }}
+        working-directory: ${{ env.WP_ROOT }}
+        shell: bash
+        run: |
+          slug=schedsense-fast-diagnostics-for-action-scheduler
+          wp plugin install "$GITHUB_WORKSPACE/$slug.zip" --force --activate
+          wp plugin install plugin-check --activate
+          wp plugin check "$slug" --format=table --require=./wp-content/plugins/plugin-check/cli.php
+      - name: Record WordPress Coding Standards findings
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.wordpress == 'latest' }}
+        shell: bash
+        run: |
+          export COMPOSER_HOME="$RUNNER_TEMP/schedsense-composer"
+          composer global config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer global require --no-interaction wp-coding-standards/wpcs:^3.2
+          slug=schedsense-fast-diagnostics-for-action-scheduler
+          "$COMPOSER_HOME/vendor/bin/phpcs" --standard=WordPress --extensions=php \
+            --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 \
+            --report=summary --report-source="$RUNNER_TEMP/phpcs-sources.txt" \
+            --report-full="$RUNNER_TEMP/phpcs-details.txt" "$WP_ROOT/wp-content/plugins/$slug"
+      - name: Collect diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: wordpress-logs-php-${{ matrix.php }}
+          path: |
+            ${{ env.WP_ROOT }}/wp-content/debug.log
+            ${{ runner.temp }}/wordpress-http.log
+            ${{ runner.temp }}/phpcs-sources.txt
+            ${{ runner.temp }}/phpcs-details.txt
