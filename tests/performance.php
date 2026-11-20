@@ -67,7 +67,7 @@ add_filter(
 $actions = 'overview' !== $view;
 $_GET    = array( '_wpnonce' => wp_create_nonce( 'schedsense_view' ) );
 if ( $actions ) {
-	$_GET += array( 'tab' => 'failures', 'status' => 'pending' );
+	$_GET += array( 'tab' => 'failures', 'status' => 'pending', 'group' => 'schedsense-performance' );
 	if ( 'deep' === $view ) {
 		$_GET['paged'] = (int) floor( $size * 0.18 / 25 );
 	}
@@ -87,7 +87,7 @@ $markup = ob_get_clean();
 $ms     = ( hrtime( true ) - $start ) / 1e6;
 $token  = $actions ? 'ci_perf_' : 'schedsense-queue-title';
 if ( false === strpos( $markup, $token ) ) {
-	WP_CLI::error( 'The benchmark did not render the queue fixture.' );
+	WP_CLI::error( sprintf( 'The %s %s %s run did not render the %d-action queue fixture.', $variant, $state, $view, $size ) );
 }
 
 printf( "%s,%d,%s,%s,%d,%d,%.3f\n", $variant, $size, $view, $state, $wpdb->num_queries - $query_start, $http, $ms );

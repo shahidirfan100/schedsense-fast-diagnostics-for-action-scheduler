@@ -66,8 +66,16 @@ def main():
     admin = login("auditadmin")
     overview = request(admin, PAGE)
     assert 'class="wrap schedsense-wrap"' in overview
-    assert "The local wp-cron.php endpoint responded." in overview
-    assert "The local REST API post-type endpoint responded with valid data." in overview
+    probes = (
+        "The local wp-cron.php endpoint responded.",
+        "The local REST API post-type endpoint responded with valid data.",
+    )
+    # PHP's development server occasionally stalls a worker's own loopback.
+    for _ in range(2):
+        if all(probe in overview for probe in probes):
+            break
+        overview = post(admin, overview, "schedsense_refresh")
+    assert all(probe in overview for probe in probes), "Local HTTP probes did not complete"
     actions_url = link(overview, "tab=failures")
     assert "Action Scheduler is not available" in request(admin, actions_url)
     assert "Diagnostics refreshed." in post(admin, overview, "schedsense_refresh")

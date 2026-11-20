@@ -39,7 +39,7 @@ final class DiagnosisEngine {
 		$loopback = $this->check_by_id( $snapshot['checks'], 'loopback' );
 		$disabled = ! empty( $snapshot['environment']['disable_wp_cron'] );
 
-		if ( $counts['overdue_24h'] > 0 && $loopback && in_array( $loopback['status'], array( 'warning', 'critical' ), true ) ) {
+		if ( ! $disabled && $counts['overdue_24h'] > 0 && $loopback && in_array( $loopback['status'], array( 'warning', 'critical' ), true ) ) {
 			/* translators: %d: Number of actions overdue by at least 24 hours. */
 			$message = sprintf( __( '%d actions are more than 24 hours overdue and the local cron loopback test failed. The loopback problem is likely contributing to queue delay.', 'schedsense-fast-diagnostics-for-action-scheduler' ), $counts['overdue_24h'] );
 			return $this->result( 'critical', __( 'Attention Needed', 'schedsense-fast-diagnostics-for-action-scheduler' ), $message, __( 'Likely', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
@@ -83,7 +83,7 @@ final class DiagnosisEngine {
 			return $this->result( 'warning', __( 'Attention Needed', 'schedsense-fast-diagnostics-for-action-scheduler' ), $message, __( 'Confirmed', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 		}
 
-		return $this->result( 'healthy', __( 'Healthy', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'No significant scheduler problem was detected. A few recent or slightly delayed actions can be normal on traffic-triggered cron.', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'Informational', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
+		return $this->result( 'healthy', __( 'Healthy', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'The queue shows no sustained backlog, recorded failures, or potentially stuck actions.', 'schedsense-fast-diagnostics-for-action-scheduler' ), __( 'Informational', 'schedsense-fast-diagnostics-for-action-scheduler' ) );
 	}
 
 	/** @return array|null */
