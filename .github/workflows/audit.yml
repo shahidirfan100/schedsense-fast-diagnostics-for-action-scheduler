@@ -1,0 +1,125 @@
+name: WordPress plugin audit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Build and inspect plugin ZIP
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Package tracked runtime files
+        shell: bash
+        run: |
+          slug=schedsense-fast-diagnostics-for-action-scheduler
+          git archive --format=zip --prefix="$slug/" -o "$slug.zip" HEAD \
+            "$slug.php" readme.txt uninstall.php admin includes languages
+          unzip -t "$slug.zip"
+          unzip -q "$slug.zip" -d dist
+          version=$(sed -nE 's/^ \* Version:[[:space:]]+([^[:space:]]+).*/\1/p' "dist/$slug/$slug.php")
+          test -n "$version"
+          grep -Fx "Stable tag: $version" "dist/$slug/readme.txt"
+          grep -Fx "define( 'SCHEDSENSE_VERSION', '$version' );" "dist/$slug/$slug.php"
+          node --check "dist/$slug/admin/js/schedsense-admin.js"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: schedsense-plugin
+          path: schedsense-fast-diagnostics-for-action-scheduler.zip
+          if-no-files-found: error
+
+  smoke:
+    name: WordPress ${{ matrix.wordpress }} / PHP ${{ matrix.php }}
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '7.4'
+            wordpress: '6.8'
+          - php: '8.4'
+            wordpress: latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: wordpress
+          MARIADB_USER: wordpress
+          MARIADB_PASSWORD: wordpress
+        ports:
+          - 3306/tcp
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=12
+    env:
+      WP_CLI_CACHE_DIR: ${{ runner.temp }}/wp-cli-cache
+      WP_ROOT: ${{ runner.temp }}/wordpress
+      WP_URL: http://127.0.0.1:8080
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, curl, dom, mbstring, zip
+          tools: wp-cli
+          coverage: none
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: schedsense-plugin
+      - name: Install WordPress and the packaged plugin
+        env:
+          DB_PORT: ${{ job.services.mariadb.ports[3306] }}
+          WORDPRESS_VERSION: ${{ matrix.wordpress }}
+        shell: bash
+        run: |
+          slug=schedsense-fast-diagnostics-for-action-scheduler
+          wp --path="$WP_ROOT" core download --version="$WORDPRESS_VERSION"
+          cd "$WP_ROOT"
+          wp config create --dbname=wordpress --dbuser=wordpress --dbpass=wordpress --dbhost="127.0.0.1:$DB_PORT"
+          wp config set WP_DEBUG true --raw
+          wp config set WP_DEBUG_LOG true --raw
+          wp config set WP_DEBUG_DISPLAY false --raw
+          wp config set DISABLE_WP_CRON true --raw
+          wp core install --url="$WP_URL" --title=SchedSense --admin_user=auditadmin --admin_password=audit-only-password --admin_email=audit@example.test --skip-email
+          wp plugin install "$GITHUB_WORKSPACE/$slug.zip" --activate
+          find "wp-content/plugins/$slug" -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Exercise admin and lifecycle with an isolated queue
+        shell: bash
+        run: |
+          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8080 -t "$WP_ROOT" > "$RUNNER_TEMP/wordpress-http.log" 2>&1 &
+          for attempt in {1..20}; do
+            if curl -fsS -o /dev/null "$WP_URL/wp-login.php"; then break; fi
+            sleep 1
+          done
+          python3 tests/wordpress-smoke.py
+      - name: Check plugin directory rules
+        if: matrix.wordpress == 'latest'
+        working-directory: ${{ env.WP_ROOT }}
+        shell: bash
+        run: |
+          slug=schedsense-fast-diagnostics-for-action-scheduler
+          wp plugin install "$GITHUB_WORKSPACE/$slug.zip"
+          wp plugin install plugin-check --activate
+          wp plugin check "$slug" --format=table
+      - name: Collect diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: wordpress-logs-php-${{ matrix.php }}
+          path: |
+            ${{ env.WP_ROOT }}/wp-content/debug.log
+            ${{ runner.temp }}/wordpress-http.log
