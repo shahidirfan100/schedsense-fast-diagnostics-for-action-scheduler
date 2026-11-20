@@ -71,8 +71,34 @@ def main():
     actions_url = link(overview, "tab=failures")
     assert "Action Scheduler is not available" in request(admin, actions_url)
     assert "Diagnostics refreshed." in post(admin, overview, "schedsense_refresh")
+    cron = post(admin, overview, "schedsense_spawn_cron")
+    assert "WordPress accepted a standard cron spawn request." in cron or (
+        "WordPress did not start another cron spawn." in cron
+    )
     expect_http_error(admin, "/wp-admin/admin-post.php", 403,
                       {"action": "schedsense_refresh", "_wpnonce": "invalid"})
+
+    wp("eval", """
+        $requests = 0;
+        add_filter('pre_http_request', static function ($pre, $args, $url) use (&$requests) {
+            if ($args['redirection'] !== 0 || strpos($url, 'http://127.0.0.1:8080/') !== 0) {
+                throw new RuntimeException('Unexpected diagnostic HTTP request settings.');
+            }
+            ++$requests;
+            return array('response' => array('code' => 302, 'message' => 'Found'));
+        }, 10, 3);
+        $checks = array(new SchedSense\\Health\\Checks\\LoopbackCheck(),
+                        new SchedSense\\Health\\Checks\\RestApiCheck());
+        foreach ($checks as $check) {
+            $result = $check->run(array())->to_array();
+            if ($result['status'] !== 'warning' || strpos($result['summary'], '302') === false) {
+                exit(1);
+            }
+        }
+        if ($requests !== 2) {
+            exit(1);
+        }
+    """)
 
     wp("user", "create", "auditmember", "member@example.test", "--role=subscriber",
        f"--user_pass={PASSWORD}")
@@ -146,10 +172,10 @@ def main():
     assert wp("eval", f"echo ActionScheduler::store()->get_status({future});") == "pending"
     assert "<code>ci_failed</code>" not in request(admin, actions_url)
 
+    wp("transient", "set", "schedsense_ci_unrelated", "keep", "180")
     for phase in ("deactivate", "uninstall"):
         wp("transient", "set", "schedsense_diagnostic_snapshot", "fixture", "180")
         wp("transient", "set", "schedsense_source_map", "fixture", "180")
-        wp("transient", "set", "schedsense_ci_unrelated", "keep", "180")
         wp("plugin", phase, SLUG)
         assert wp("eval", """
             if (false !== get_transient('schedsense_diagnostic_snapshot') ||

@@ -83,6 +83,7 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 
 * Fixed pagination on the Actions tab so page links preserve the current filters.
 * Reduced cache writes when resolving sources for large action samples.
+* Local WP-Cron and REST checks now report redirects without forwarding diagnostic headers.
 
 = 1.0.4 =
 * Make nonce verification explicit in each read-only GET filter handler.

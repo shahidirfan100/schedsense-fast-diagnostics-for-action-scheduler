@@ -28,10 +28,12 @@ final class LoopbackCheck implements HealthCheckInterface {
 		}
 		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- This is the WordPress core Site Health SSL filter; its name must remain unchanged.
 		$sslverify = apply_filters( 'https_local_ssl_verify', false, $url );
+		// Keep diagnostic credentials scoped to the original local endpoint.
+		$redirection = 0;
 		$started   = microtime( true );
 		$response = wp_remote_post(
 			$url,
-			compact( 'body', 'cookies', 'headers', 'timeout', 'sslverify' )
+			compact( 'body', 'cookies', 'headers', 'timeout', 'sslverify', 'redirection' )
 		);
 		$elapsed  = round( ( microtime( true ) - $started ) * 1000 );
 
