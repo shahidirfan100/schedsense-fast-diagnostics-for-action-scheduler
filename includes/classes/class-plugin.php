@@ -36,15 +36,20 @@ final class Plugin {
 	/**
 	 * Register hooks. No queue work occurs on frontend requests.
 	 *
-	 * @return void
+	 * @return bool Whether the runtime could be registered.
 	 */
 	public function register() {
 		if ( ! is_admin() ) {
-			return;
+			return true;
+		}
+
+		if ( ! class_exists( AdminController::class ) || ! class_exists( ActionSchedulerAdapter::class ) ) {
+			return false;
 		}
 
 		$controller = new AdminController( new ActionSchedulerAdapter() );
 		$controller->register();
+		return true;
 	}
 
 	/** Prevent direct construction. */

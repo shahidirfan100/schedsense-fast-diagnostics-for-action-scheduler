@@ -3,7 +3,7 @@ Contributors: shahidirfan100
 Tags: cron, diagnostics, queue, troubleshooting, site health
 Requires at least: 6.8
 Tested up to: 7.1
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -79,6 +79,11 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 
 == Changelog ==
 
+= 1.0.7 =
+
+* Fixed a fatal error when opening WordPress admin with the published 1.0.6 package on Linux.
+* Show an administrator notice if required startup files are missing.
+
 = 1.0.6 =
 
 * Load the Actions tab without running a full health scan or loopback checks.
@@ -113,6 +118,9 @@ The report contains WordPress, PHP, database, Action Scheduler, and WooCommerce 
 * Added confirmed deletion for individual failed actions and clearer failure-specific guidance.
 
 == Upgrade Notice ==
+
+= 1.0.7 =
+Fixes the WordPress admin startup error in the published 1.0.6 package.
 
 = 1.0.4 =
 Makes view-filter nonce checks explicit for security review and documents the canonical WordPress loopback endpoint.

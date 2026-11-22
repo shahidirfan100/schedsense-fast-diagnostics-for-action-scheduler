@@ -62,8 +62,29 @@ def expect_http_error(session, path, code, data=None):
         raise AssertionError(f"Expected HTTP {code} at {path}")
 
 
+def check_incomplete_install(admin):
+    plugin_dir = ROOT / "wp-content/plugins" / SLUG
+    for relative in (
+        "includes/class-autoloader.php",
+        "includes/classes/class-plugin.php",
+        "includes/classes/admin/class-admincontroller.php",
+        "includes/classes/scheduler/class-actionscheduleradapter.php",
+    ):
+        path = plugin_dir / relative
+        backup = path.with_suffix(".disabled")
+        path.rename(backup)
+        try:
+            assert "SchedSense could not start because its installation is incomplete." in request(
+                admin, "/wp-admin/index.php"
+            ), relative
+            request(admin, "/")
+        finally:
+            backup.rename(path)
+
+
 def main():
     admin = login("auditadmin")
+    check_incomplete_install(admin)
     overview = request(admin, PAGE)
     assert 'class="wrap schedsense-wrap"' in overview
     probes = (

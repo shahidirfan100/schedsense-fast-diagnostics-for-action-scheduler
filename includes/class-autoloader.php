@@ -18,7 +18,7 @@ spl_autoload_register(
 
 		$relative  = strtolower( str_replace( '\\', '/', substr( $class_name, strlen( $prefix ) ) ) );
 		$directory = dirname( $relative );
-		$file      = __DIR__ . '/' . ( '.' === $directory ? '' : $directory . '/' ) . 'class-' . basename( $relative ) . '.php';
+		$file      = __DIR__ . '/classes/' . ( '.' === $directory ? '' : $directory . '/' ) . 'class-' . basename( $relative ) . '.php';
 		if ( is_readable( $file ) ) {
 			require_once $file;
 		}
