@@ -32,6 +32,7 @@ $schedsense_tabs = array(
 			<button type="submit" class="button button-primary"><span class="dashicons dashicons-update" aria-hidden="true"></span><?php echo esc_html__( 'Refresh diagnostics', 'schedsense-fast-diagnostics-for-action-scheduler' ); ?></button>
 		</form>
 	</header>
+	<hr class="wp-header-end">
 
 	<?php if ( $notice ) : ?>
 		<?php require SCHEDSENSE_PLUGIN_DIR . 'admin/views/notice.php'; ?>

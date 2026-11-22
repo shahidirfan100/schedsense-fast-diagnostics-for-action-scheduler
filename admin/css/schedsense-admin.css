@@ -15,9 +15,41 @@
 .schedsense-header { align-items: center; background: linear-gradient(120deg, #132238, #1b3653); border-radius: 12px; color: #fff; display: flex; gap: 16px; margin: 20px 0 0; padding: 22px 26px; }
 .schedsense-header h1 { color: #fff; font-size: 25px; font-weight: 650; margin: 0 0 3px; padding: 0; }
 .schedsense-header p { color: #cbd8e6; margin: 0; }
-.schedsense-header__action { margin-left: auto; }
-.schedsense-header .button-primary { align-items: center; background: var(--schedsense-accent); border-color: var(--schedsense-accent); color: #fff; display: inline-flex; gap: 7px; }
-.schedsense-header .button-primary:hover, .schedsense-header .button-primary:focus { background: var(--schedsense-accent-dark); border-color: var(--schedsense-accent-dark); color: #fff; }
+.schedsense-header__action { margin-left: auto; max-width: 100%; }
+.schedsense-wrap .schedsense-header__action .button-primary {
+	align-items: center;
+	background: var(--schedsense-accent-dark);
+	border-color: var(--schedsense-accent-dark);
+	color: #fff;
+	display: inline-flex;
+	gap: 8px;
+	justify-content: center;
+	line-height: 1.4;
+	margin-bottom: 0;
+	max-width: 100%;
+	min-height: 40px;
+	overflow-wrap: anywhere;
+	padding: 6px 12px;
+	white-space: normal;
+}
+.schedsense-wrap .schedsense-header__action .button-primary .dashicons {
+	flex: none;
+	font-size: 18px;
+	height: 1em;
+	line-height: 1;
+	width: 1em;
+}
+.schedsense-wrap .schedsense-header__action .button-primary:hover,
+.schedsense-wrap .schedsense-header__action .button-primary:active {
+	background: #06675d;
+	border-color: #06675d;
+	color: #fff;
+}
+.schedsense-wrap .schedsense-header__action .button-primary:focus-visible {
+	box-shadow: none;
+	outline: 2px solid #fff;
+	outline-offset: 3px;
+}
 .schedsense-brand { border-radius: 10px; display: block; height: 52px; object-fit: cover; width: 52px; }
 .schedsense-wrap .nav-tab-wrapper { margin: 18px 0; }
 .schedsense-wrap .nav-tab { background: transparent; border: 0; border-bottom: 3px solid transparent; color: var(--schedsense-muted); margin: 0 22px 0 0; padding: 10px 2px; }

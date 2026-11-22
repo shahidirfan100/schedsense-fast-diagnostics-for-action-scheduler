@@ -16,6 +16,12 @@ Upload the `schedsense-fast-diagnostics-for-action-scheduler` plugin ZIP through
 
 The WordPress.org directory readme is in [`readme.txt`](readme.txt). Listing graphics and screenshots are in [`assets/wordpress.org/`](assets/wordpress.org/).
 
+## Release
+
+Download the `schedsense-plugin` artifact from a successful **WordPress plugin audit** run to install the tested ZIP. The workflow checks the ZIP on WordPress and rehearses staging it in both SVN trunk and the version tag.
+
+To publish, configure the `SVN_USERNAME` and `SVN_PASSWORD` GitHub Actions secrets, then run **WordPress plugin audit** on `main` with **publish** enabled. The workflow publishes the same ZIP it tests and compares the public download with that build.
+
 ## Roadmap
 
 See [ROADMAP.md](ROADMAP.md) for benchmark results, the competitor comparison, and planned improvements.

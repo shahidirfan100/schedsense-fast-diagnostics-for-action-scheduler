@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the tested main-branch ZIP to WordPress.org
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -14,11 +19,14 @@ jobs:
     name: Build and inspect plugin ZIP
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    outputs:
+      version: ${{ steps.package.outputs.version }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
       - name: Package tracked runtime files
+        id: package
         shell: bash
         run: |
           slug=schedsense-fast-diagnostics-for-action-scheduler
@@ -31,14 +39,42 @@ jobs:
           grep -Fx "Stable tag: $version" "dist/$slug/readme.txt"
           grep -Fx "define( 'SCHEDSENSE_VERSION', '$version' );" "dist/$slug/$slug.php"
           node --check "dist/$slug/admin/js/schedsense-admin.js"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: schedsense-plugin
           path: schedsense-fast-diagnostics-for-action-scheduler.zip
           if-no-files-found: error
 
+  svn-package:
+    name: Rehearse WordPress.org SVN packaging
+    needs: package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SLUG: schedsense-fast-diagnostics-for-action-scheduler
+      VERSION: ci-package-check
+      BUILD_DIR: dist/schedsense-fast-diagnostics-for-action-scheduler
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: schedsense-plugin
+      - run: unzip -q "$SLUG.zip" -d dist
+      - uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+        with:
+          dry-run: true
+        env:
+          # This action version checks for nonempty credentials even in dry-run mode.
+          SVN_USERNAME: dry-run
+          SVN_PASSWORD: dry-run
+      - name: Compare staged SVN trunk and tag with the tested ZIP
+        run: |
+          svn_dir="$HOME/svn-$SLUG"
+          diff -qr "$BUILD_DIR" "$svn_dir/trunk"
+          diff -qr "$BUILD_DIR" "$svn_dir/tags/$VERSION"
+
   smoke:
-    name: WordPress ${{ matrix.wordpress }} / PHP ${{ matrix.php }}
+    name: WordPress ${{ matrix.wordpress }} / PHP ${{ matrix.php }} (${{ matrix.install }})
     needs: package
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -50,9 +86,16 @@ jobs:
             wordpress: '6.8'
             action-scheduler: '3.9.3'
             upgrade-from: '1.0.4'
+            install: upgrade-1.0.4
           - php: '8.4'
             wordpress: latest
             action-scheduler: latest
+            install: fresh
+          - php: '8.4'
+            wordpress: latest
+            action-scheduler: latest
+            upgrade-from: '1.0.6'
+            install: upgrade-1.0.6
     services:
       mariadb:
         image: mariadb:10.11
@@ -104,28 +147,50 @@ jobs:
           wp config set WP_DEBUG_DISPLAY false --raw
           wp config set DISABLE_WP_CRON true --raw
           wp core install --url="$WP_URL" --title=SchedSense --admin_user=auditadmin --admin_password=audit-only-password --admin_email=audit@example.test --skip-email
+          # Revalidate code immediately when WP-CLI swaps files in the web server's live tree.
+          PHP_CLI_SERVER_WORKERS=4 php -d opcache.validate_timestamps=1 -d opcache.revalidate_freq=0 \
+            -S 127.0.0.1:8080 -t "$WP_ROOT" > "$RUNNER_TEMP/wordpress-http.log" 2>&1 &
+          for attempt in {1..20}; do
+            if curl -fs -o /dev/null "$WP_URL/wp-login.php"; then break; fi
+            sleep 1
+          done
           if [[ -n "$UPGRADE_FROM" ]]; then
-            wp plugin install "$slug" --version="$UPGRADE_FROM" --activate
+            wp plugin install "$slug" --version="$UPGRADE_FROM"
             test "$(wp plugin get "$slug" --field=version)" = "$UPGRADE_FROM"
+            wp option update active_plugins "[\"$slug/$slug.php\"]" --format=json
+            if [[ "$UPGRADE_FROM" == '1.0.6' ]]; then
+              # Confirm this is the mixed-case WordPress.org release that failed in production.
+              old="wp-content/plugins/$slug/includes"
+              test -f "$old/Admin/class-admincontroller.php"
+              test ! -e "$old/admin/class-admincontroller.php"
+              test "$(curl -sS -o /dev/null -w '%{http_code}' "$WP_URL/wp-admin/index.php")" = 500
+              grep -F 'SchedSense\Admin\AdminController" not found' wp-content/debug.log
+              mv wp-content/debug.log "$RUNNER_TEMP/wordpress-1.0.6-fatal.log"
+            fi
+            wp --skip-plugins="$slug" plugin install "$GITHUB_WORKSPACE/$slug.zip" --force
+            wp plugin is-active "$slug"
+          else
+            wp plugin install "$GITHUB_WORKSPACE/$slug.zip" --activate
           fi
-          wp plugin install "$GITHUB_WORKSPACE/$slug.zip" --force --activate
           grep -Fx "Stable tag: $(wp plugin get "$slug" --field=version)" \
             "wp-content/plugins/$slug/readme.txt"
-          test ! -e "wp-content/plugins/$slug/includes/Plugin.php"
+          unzip -q "$GITHUB_WORKSPACE/$slug.zip" -d "$RUNNER_TEMP/expected-package"
+          diff -qr "$RUNNER_TEMP/expected-package/$slug" "wp-content/plugins/$slug"
           find "wp-content/plugins/$slug" -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Check refresh button and dashboard notices in Chrome
+        if: matrix.install == 'fresh'
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/schedsense-browser" --no-audit --no-fund playwright-core@1.58.2
+          NODE_PATH="$RUNNER_TEMP/schedsense-browser/node_modules" node tests/admin-ui.cjs
       - name: Exercise admin and lifecycle with an isolated queue
         env:
           ACTION_SCHEDULER_VERSION: ${{ matrix.action-scheduler }}
         shell: bash
         run: |
-          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8080 -t "$WP_ROOT" > "$RUNNER_TEMP/wordpress-http.log" 2>&1 &
-          for attempt in {1..20}; do
-            if curl -fs -o /dev/null "$WP_URL/wp-login.php"; then break; fi
-            sleep 1
-          done
           python3 tests/wordpress-smoke.py
       - name: Check plugin directory rules
-        if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.wordpress == 'latest' }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.install == 'fresh' }}
         working-directory: ${{ env.WP_ROOT }}
         shell: bash
         run: |
@@ -134,7 +199,7 @@ jobs:
           wp plugin install plugin-check --activate
           wp plugin check "$slug" --format=table --require=./wp-content/plugins/plugin-check/cli.php
       - name: Enforce WordPress Coding Standards
-        if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.wordpress == 'latest' }}
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.install == 'fresh' }}
         shell: bash
         run: |
           export COMPOSER_HOME="$RUNNER_TEMP/schedsense-composer"
@@ -145,17 +210,53 @@ jobs:
             --report=summary --report-source="$RUNNER_TEMP/phpcs-sources.txt" \
             --report-full="$RUNNER_TEMP/phpcs-details.txt" "$WP_ROOT/wp-content/plugins/$slug"
       - name: Compare MariaDB queue performance
-        if: matrix.wordpress == 'latest'
+        if: matrix.install == 'fresh'
         shell: bash
         run: bash tests/performance.sh
       - name: Collect diagnostics
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: wordpress-logs-php-${{ matrix.php }}
+          name: wordpress-logs-${{ matrix.install }}
           path: |
             ${{ env.WP_ROOT }}/wp-content/debug.log
             ${{ runner.temp }}/wordpress-http.log
+            ${{ runner.temp }}/wordpress-1.0.6-fatal.log
+            ${{ runner.temp }}/schedsense-admin-ui.png
             ${{ runner.temp }}/phpcs-sources.txt
             ${{ runner.temp }}/phpcs-details.txt
             ${{ runner.temp }}/schedsense-performance.csv
+
+  publish:
+    name: Publish verified ZIP to WordPress.org
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'
+    needs: [package, svn-package, smoke]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency: wordpress-org-release
+    env:
+      SLUG: schedsense-fast-diagnostics-for-action-scheduler
+      VERSION: ${{ needs.package.outputs.version }}
+      BUILD_DIR: dist/schedsense-fast-diagnostics-for-action-scheduler
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: schedsense-plugin
+      - run: unzip -q "$SLUG.zip" -d dist
+      - uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+      - name: Verify the public download matches the tested ZIP
+        shell: bash
+        run: |
+          for attempt in {1..20}; do
+            if curl -fsSL --max-time 20 "https://downloads.wordpress.org/plugin/$SLUG.$VERSION.zip" -o published.zip; then
+              unzip -oq published.zip -d published
+              diff -qr "$BUILD_DIR" "published/$SLUG"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::The published ZIP is unavailable. Check WordPress.org release confirmation and propagation."
+          exit 1
