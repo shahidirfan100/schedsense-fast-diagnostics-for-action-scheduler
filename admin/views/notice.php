@@ -19,5 +19,5 @@ $schedsense_messages = array(
 );
 ?>
 <?php if ( isset( $schedsense_messages[ $notice ] ) ) : ?>
-	<div class="notice notice-info is-dismissible"><p><?php echo esc_html( $schedsense_messages[ $notice ] ); ?></p></div>
+	<div class="notice notice-info is-dismissible inline"><p><?php echo esc_html( $schedsense_messages[ $notice ] ); ?></p></div>
 <?php endif; ?>

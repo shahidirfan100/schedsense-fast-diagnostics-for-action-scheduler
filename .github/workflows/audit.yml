@@ -177,6 +177,12 @@ jobs:
           unzip -q "$GITHUB_WORKSPACE/$slug.zip" -d "$RUNNER_TEMP/expected-package"
           diff -qr "$RUNNER_TEMP/expected-package/$slug" "wp-content/plugins/$slug"
           find "wp-content/plugins/$slug" -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Check refresh button and dashboard notices in Chrome
+        if: matrix.install == 'fresh'
+        shell: bash
+        run: |
+          npm install --prefix "$RUNNER_TEMP/schedsense-browser" --no-audit --no-fund playwright-core@1.58.2
+          NODE_PATH="$RUNNER_TEMP/schedsense-browser/node_modules" node tests/admin-ui.cjs
       - name: Exercise admin and lifecycle with an isolated queue
         env:
           ACTION_SCHEDULER_VERSION: ${{ matrix.action-scheduler }}
@@ -216,6 +222,7 @@ jobs:
             ${{ env.WP_ROOT }}/wp-content/debug.log
             ${{ runner.temp }}/wordpress-http.log
             ${{ runner.temp }}/wordpress-1.0.6-fatal.log
+            ${{ runner.temp }}/schedsense-admin-ui.png
             ${{ runner.temp }}/phpcs-sources.txt
             ${{ runner.temp }}/phpcs-details.txt
             ${{ runner.temp }}/schedsense-performance.csv
