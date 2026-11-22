@@ -16,7 +16,10 @@ add_action( 'admin_notices', static function () {
 	let browser;
 	try {
 		browser = await chromium.launch({ channel: 'chrome' });
-		const page = await browser.newPage({ viewport: { width: 1280, height: 840 } });
+		const page = await browser.newPage({
+			viewport: { width: 1280, height: 840 },
+			reducedMotion: 'reduce'
+		});
 		const url = process.env.WP_URL;
 		await page.goto(url + '/wp-login.php');
 		await page.locator('#user_login').fill('auditadmin');
