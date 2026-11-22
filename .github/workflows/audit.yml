@@ -63,6 +63,10 @@ jobs:
       - uses: 10up/action-wordpress-plugin-deploy@54bd289b8525fd23a5c365ec369185f2966529c2 # 2.3.0
         with:
           dry-run: true
+        env:
+          # This action version checks for nonempty credentials even in dry-run mode.
+          SVN_USERNAME: dry-run
+          SVN_PASSWORD: dry-run
       - name: Compare staged SVN trunk and tag with the tested ZIP
         run: |
           svn_dir="$HOME/svn-$SLUG"
@@ -143,7 +147,9 @@ jobs:
           wp config set WP_DEBUG_DISPLAY false --raw
           wp config set DISABLE_WP_CRON true --raw
           wp core install --url="$WP_URL" --title=SchedSense --admin_user=auditadmin --admin_password=audit-only-password --admin_email=audit@example.test --skip-email
-          PHP_CLI_SERVER_WORKERS=4 php -S 127.0.0.1:8080 -t "$WP_ROOT" > "$RUNNER_TEMP/wordpress-http.log" 2>&1 &
+          # Revalidate code immediately when WP-CLI swaps files in the web server's live tree.
+          PHP_CLI_SERVER_WORKERS=4 php -d opcache.validate_timestamps=1 -d opcache.revalidate_freq=0 \
+            -S 127.0.0.1:8080 -t "$WP_ROOT" > "$RUNNER_TEMP/wordpress-http.log" 2>&1 &
           for attempt in {1..20}; do
             if curl -fs -o /dev/null "$WP_URL/wp-login.php"; then break; fi
             sleep 1
